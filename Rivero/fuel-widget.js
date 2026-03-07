@@ -40,9 +40,13 @@ function parseChartJson(html, product) {
   const m = html.match(/'chartJson'\s*:\s*'((?:[^'\\]|\\.)*)'/);
   if (!m) return 0;
   try {
-    const unescaped = m[1].replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) =>
-      String.fromCharCode(parseInt(hex, 16))
-    );
+    const unescaped = m[1].replace(/\\(x([0-9a-fA-F]{2})|.)/g, (match, esc, hex) => {
+      if (hex) return String.fromCharCode(parseInt(hex, 16));
+      if (esc === '\\') return '\\';
+      if (esc === "'") return "'";
+      if (esc === 'n') return '\n';
+      return esc;
+    });
     const chart = JSON.parse(unescaped);
     const rows = chart?.dataTable?.rows;
     if (rows) {
