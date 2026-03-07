@@ -413,7 +413,9 @@ avail.textColor = countAvail === results.length ? colorGreen : textSecondary;
 if (config.runsInWidget) {
   Script.setWidget(w);
 } else {
-  // Menú interactivo: seleccionar estación → abrir en Waze
+  // Mostrar widget primero, luego menú para navegar en Waze
+  await w.presentLarge();
+
   const alert = new Alert();
   alert.title = "Navegar a estación";
   alert.message = "Seleccioná una estación para abrir en Waze";
