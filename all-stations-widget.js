@@ -72,6 +72,17 @@ const STATIONS = [
     url: "http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134",
     key: "Gasco",
   },
+  {
+    name: "Rivero",
+    type: "gsheets",
+    company: "Rivero",
+    url:
+      "https://docs.google.com/spreadsheets/d/e/" +
+      "2CAIWO3els60V5S1vVAh0cccQxdcZ1MYZhD9A1pQ-ojCNPoNh-" +
+      "vJjHhJaUalVsDLQivYf_Z23Un8mEaePxSg" +
+      "/gviz/tq?tqx=out:csv",
+    product: "ESPECIAL",
+  },
 ];
 
 /***********************
@@ -156,6 +167,27 @@ function parseGasGroup(json, product) {
   return Math.round(total);
 }
 
+function parseGSheets(csv, product) {
+  if (!csv) return 0;
+  // Google Sheets gviz/tq?tqx=out:csv returns quoted CSV rows.
+  // We look for rows whose first column matches the product keyword
+  // and extract the numeric liter value from subsequent columns.
+  const lines = csv.split("\n");
+  let total = 0;
+  for (const line of lines) {
+    if (!line.toUpperCase().includes(product.toUpperCase())) continue;
+    // Extract all numbers from the line (ignoring the product text)
+    const nums = line.match(/[\d]+(?:[.,]\d+)*/g);
+    if (nums) {
+      for (const n of nums) {
+        const val = normalizeLiters(n);
+        if (val > total) total = val;
+      }
+    }
+  }
+  return total;
+}
+
 /***********************
  * FETCH ALL (paralelo)
  ***********************/
@@ -188,6 +220,10 @@ async function fetchStation(s) {
   if (s.type === "gasgroup") {
     const json = await getJSON(s.url);
     return parseGasGroup(json, s.product);
+  }
+  if (s.type === "gsheets") {
+    const csv = await getHTML(s.url, false);
+    return parseGSheets(csv, s.product);
   }
   return 0;
 }
