@@ -169,7 +169,6 @@ const results = await Promise.all(
 // Ordenar: mayor disponibilidad primero, sin dato al final
 results.sort((a, b) => b.litros - a.litros);
 
-const total = results.reduce((sum, r) => sum + r.litros, 0);
 const now = new Date();
 
 /***********************
@@ -229,7 +228,7 @@ for (let i = 0; i < results.length; i++) {
   // Contenedor de fila con fondo alternado
   const rowContainer = w.addStack();
   rowContainer.layoutVertically();
-  rowContainer.setPadding(10, 12, 10, 12);
+  rowContainer.setPadding(6, 12, 6, 12);
   rowContainer.cornerRadius = 10;
   if (i % 2 === 0) {
     rowContainer.backgroundColor = rowEven;
@@ -272,37 +271,6 @@ for (let i = 0; i < results.length; i++) {
 
 // Empujar al fondo
 w.addSpacer();
-
-// ── TOTAL
-const totalBar = w.addStack();
-totalBar.layoutHorizontally();
-totalBar.centerAlignContent();
-totalBar.setPadding(8, 12, 8, 12);
-totalBar.cornerRadius = 10;
-totalBar.backgroundColor = Color.dynamic(
-  new Color("#E8F5E9"),
-  new Color("#1B3A1B")
-);
-
-const totalLabel = totalBar.addText("TOTAL");
-totalLabel.font = Font.boldSystemFont(13);
-totalLabel.textColor = Color.dynamic(
-  new Color("#2E7D32"),
-  new Color("#66BB6A")
-);
-
-totalBar.addSpacer();
-
-const totalValue = totalBar.addText(
-  `${total.toLocaleString("es-BO")} Lts`
-);
-totalValue.font = Font.boldSystemFont(18);
-totalValue.textColor = Color.dynamic(
-  new Color("#2E7D32"),
-  new Color("#66BB6A")
-);
-
-w.addSpacer(8);
 
 // ── METADATA
 const metaStack = w.addStack();
