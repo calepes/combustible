@@ -11,8 +11,12 @@
  * 4. Si no hay internet, usa la copia local
  *****************************************************/
 
-const REPO_URL =
-  "https://raw.githubusercontent.com/calepes/Widget-combustible/main/all-stations-widget.js";
+const REPO_OWNER = "calepes";
+const REPO_NAME = "Widget-combustible";
+const BRANCH = "main";
+const FILE = "all-stations-widget.js";
+
+const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + FILE + "?ref=" + encodeURIComponent(BRANCH);
 
 const fm = FileManager.iCloud();
 const dir = fm.joinPath(fm.documentsDirectory(), "combustible-cache");
@@ -27,11 +31,12 @@ let code;
 
 try {
   // Descargar la ultima version desde GitHub
-  const req = new Request(REPO_URL);
+  const req = new Request(API_URL);
   req.timeoutInterval = 10;
+  req.headers = { Accept: "application/vnd.github.v3.raw" };
   code = await req.loadString();
 
-  if (code && code.length > 100 && !code.includes("404: Not Found")) {
+  if (code && code.length > 100 && !code.includes('"message":"Not Found"')) {
     // Guardar copia local
     fm.writeString(localPath, code);
     console.log("Widget actualizado desde GitHub");
@@ -60,4 +65,4 @@ try {
 }
 
 // Ejecutar el widget descargado
-eval(code);
+await eval("(async () => { " + code + " })()");
