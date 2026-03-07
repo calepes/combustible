@@ -170,16 +170,60 @@ function parseGasGroup(json, product) {
 async function fetchChartData(url, product) {
   const upper = product.toUpperCase();
   try {
+    // Strategy 1: fetch raw HTML and look for embedded data
+    const html = await fetchHTML(url, false);
+    if (html) {
+      // Google Charts embed data via google.visualization.Query.setResponse({...})
+      const jsonMatch = html.match(/setResponse\(([\s\S]+?)\);/);
+      if (jsonMatch) {
+        try {
+          const data = JSON.parse(jsonMatch[1]);
+          const rows = data?.table?.rows;
+          if (rows) {
+            for (const row of rows) {
+              const cells = row.c || [];
+              const hasProduct = cells.some(
+                (c) =>
+                  typeof c?.v === "string" &&
+                  c.v.toUpperCase().includes(upper)
+              );
+              if (!hasProduct) continue;
+              for (const c of cells) {
+                if (typeof c?.v === "number" && c.v > 0)
+                  return Math.round(c.v);
+              }
+            }
+          }
+        } catch (_) {}
+      }
+      // Look for data arrays like ["ESPECIAL",55000]
+      const re1 = new RegExp(
+        `["']([^"']*${upper}[^"']*)["'][\\s,]*[,\\]]\\s*(\\d[\\d.,]*)`,
+        "i"
+      );
+      const m1 = html.match(re1);
+      if (m1) return normalizeLiters(m1[2]);
+      // Brute force: product name near a number in cleaned text
+      const clean = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+      const re2 = new RegExp(
+        `${upper}[\\s\\S]{0,80}?(\\d{1,3}(?:[.,]\\d{3})*(?:\\.\\d+)?)`,
+        "i"
+      );
+      const m2 = clean.match(re2);
+      if (m2) {
+        const val = normalizeLiters(m2[1]);
+        if (val >= 100) return val;
+      }
+    }
+
+    // Strategy 2: use WebView to execute JS and wait for chart to render
     const wv = new WebView();
     await wv.loadURL(url);
-    // Extract rendered text from the chart after JS executes
     const text = await wv.evaluateJavaScript(
-      `completion(document.body.innerText);`,
+      `setTimeout(() => { completion(document.body.innerText); }, 5000);`,
       true
     );
     if (!text) return 0;
-    // The rendered chart shows lines like "ESPECIAL +" and "55,000  Lit..."
-    // Search for the product name and grab the largest number near it
     const lines = text.split("\n");
     let best = 0;
     let found = false;
@@ -196,7 +240,6 @@ async function fetchChartData(url, product) {
         if (best > 0) return best;
       }
     }
-    // Fallback: search all text for product + number
     const re = new RegExp(
       `${upper}[\\s\\S]{0,200}?(\\d{1,3}(?:[,.]\\d{3})+|\\d{4,})`,
       "i"

@@ -19,15 +19,76 @@ function normalizeLiters(raw) {
 }
 
 /***********************
- * FETCH via WebView
+ * FETCH HTML
+ ***********************/
+async function fetchHTML(url) {
+  const r = new Request(url);
+  r.timeoutInterval = 15;
+  r.headers = {
+    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS like Mac OS X)",
+    Accept: "text/html,*/*",
+  };
+  try {
+    return await r.loadString();
+  } catch (_) {
+    return "";
+  }
+}
+
+/***********************
+ * PARSE + FETCH CHART
  ***********************/
 async function fetchChartData(url, product) {
   const upper = product.toUpperCase();
   try {
+    // Strategy 1: fetch raw HTML and look for embedded data
+    const html = await fetchHTML(url);
+    if (html) {
+      const jsonMatch = html.match(/setResponse\(([\s\S]+?)\);/);
+      if (jsonMatch) {
+        try {
+          const data = JSON.parse(jsonMatch[1]);
+          const rows = data?.table?.rows;
+          if (rows) {
+            for (const row of rows) {
+              const cells = row.c || [];
+              const hasProduct = cells.some(
+                (c) =>
+                  typeof c?.v === "string" &&
+                  c.v.toUpperCase().includes(upper)
+              );
+              if (!hasProduct) continue;
+              for (const c of cells) {
+                if (typeof c?.v === "number" && c.v > 0)
+                  return Math.round(c.v);
+              }
+            }
+          }
+        } catch (_) {}
+      }
+      const re1 = new RegExp(
+        `["']([^"']*${upper}[^"']*)["'][\\s,]*[,\\]]\\s*(\\d[\\d.,]*)`,
+        "i"
+      );
+      const m1 = html.match(re1);
+      if (m1) return normalizeLiters(m1[2]);
+      const clean = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+      const re2 = new RegExp(
+        `${upper}[\\s\\S]{0,80}?(\\d{1,3}(?:[.,]\\d{3})*(?:\\.\\d+)?)`,
+        "i"
+      );
+      const m2 = clean.match(re2);
+      if (m2) {
+        const val = normalizeLiters(m2[1]);
+        if (val >= 100) return val;
+      }
+    }
+
+    // Strategy 2: use WebView with delay for JS to render the chart
     const wv = new WebView();
     await wv.loadURL(url);
     const text = await wv.evaluateJavaScript(
-      `completion(document.body.innerText);`,
+      `setTimeout(() => { completion(document.body.innerText); }, 5000);`,
       true
     );
     if (!text) return 0;
