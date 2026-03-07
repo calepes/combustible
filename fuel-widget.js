@@ -46,10 +46,10 @@ function extractEspecialGenexI(html) {
     .replace(/&nbsp;/gi, " ")
     .replace(/\s+/g, " ");
 
+  // G. ESPECIAL+ → el "+" puede venir de <sup>+</sup>,
+  // que al stripear tags queda "G. ESPECIAL +"
   const re = new RegExp(
-    `${STATION}[\\s\\S]*?${FUEL_LABEL
-      .replace(/\./g, "\\.")
-      .replace(/\+/g, "\\+")}[\\s\\S]*?(\\d[\\d.,]*)\\s*litros`,
+    `${STATION}\\b[\\s\\S]*?G\\.\\s*ESPECIAL\\s*\\+[\\s\\S]*?(\\d[\\d.,]*)\\s*litros`,
     "i"
   );
 
