@@ -250,14 +250,22 @@ const subtitle = headerStack.addText("Gasolina Especial");
 subtitle.font = Font.systemFont(11);
 subtitle.textColor = textSecondary;
 
-w.addSpacer(8);
+w.addSpacer(6);
 
-// ── FILAS DE ESTACIONES
+// ── SEPARADOR HEADER
 const sepColor = Color.dynamic(
-  new Color("#E5E5EA"),
+  new Color("#D1D1D6"),
   new Color("#3A3A3C")
 );
+const headerSep = w.addStack();
+headerSep.layoutHorizontally();
+const headerLine = headerSep.addText("─".repeat(50));
+headerLine.font = Font.systemFont(2);
+headerLine.textColor = sepColor;
 
+w.addSpacer(6);
+
+// ── FILAS DE ESTACIONES
 for (let i = 0; i < results.length; i++) {
   const r = results[i];
 
@@ -290,17 +298,20 @@ for (let i = 0; i < results.length; i++) {
   litrosText.textColor = r.litros > 0 ? textPrimary : colorRed;
   litrosText.lineLimit = 1;
 
-  // Separador fino entre filas
+  // Separador sutil entre filas
   if (i < results.length - 1) {
-    w.addSpacer(4);
+    w.addSpacer(3);
     const sepLine = w.addStack();
     sepLine.layoutHorizontally();
-    sepLine.addSpacer(24);
-    const line = sepLine.addText("─".repeat(40));
-    line.font = Font.systemFont(3);
-    line.textColor = sepColor;
-    sepLine.addSpacer(8);
-    w.addSpacer(4);
+    sepLine.addSpacer(20);
+    const line = sepLine.addText("─".repeat(50));
+    line.font = Font.systemFont(1);
+    line.textColor = Color.dynamic(
+      new Color("#E5E5EA"),
+      new Color("#2C2C2E")
+    );
+    sepLine.addSpacer(4);
+    w.addSpacer(3);
   }
 }
 
