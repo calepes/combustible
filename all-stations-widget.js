@@ -213,18 +213,8 @@ const colorRed = new Color("#FF3B30");
 const colorGreen = new Color("#34C759");
 
 /***********************
- * FONTS – SF Rounded + Mono
+ * FONTS
  ***********************/
-function roundedFont(size, weight) {
-  const weights = {
-    bold: "Bold",
-    semibold: "Semibold",
-    medium: "Medium",
-    regular: "Regular",
-  };
-  return new Font(".SFUIText-" + (weights[weight] || "Regular"), size);
-}
-
 function monoFont(size) {
   return new Font("Menlo-Bold", size);
 }
