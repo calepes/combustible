@@ -46,10 +46,10 @@ const STATIONS = [
     key: "Alemana",
   },
   {
-    name: "Biopetrol López",
+    name: "López",
     type: "ec2",
     url: "http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134",
-    key: "López",
+    key: "Lopez",
   },
   {
     name: "Viru Viru",
@@ -206,14 +206,6 @@ const rowEven = Color.dynamic(
   new Color("#F2F2F7", 1),
   new Color("#1C1C1E", 1)
 );
-const rowOdd = Color.dynamic(
-  new Color("#FFFFFF", 0),
-  new Color("#000000", 0)
-);
-const sepColor = Color.dynamic(
-  new Color("#E5E5EA"),
-  new Color("#38383A")
-);
 
 /***********************
  * WIDGET LARGE
@@ -223,31 +215,30 @@ w.backgroundColor = Color.dynamic(
   new Color("#FFFFFF"),
   new Color("#000000")
 );
-w.setPadding(16, 16, 12, 16);
+w.setPadding(12, 14, 10, 14);
 
 // ── HEADER
 const headerStack = w.addStack();
 headerStack.layoutVertically();
 
 const header = headerStack.addText("Combustible");
-header.font = Font.boldSystemFont(26);
+header.font = Font.boldSystemFont(20);
 header.textColor = textPrimary;
 
 const subtitle = headerStack.addText("Gasolina Especial");
-subtitle.font = Font.systemFont(13);
+subtitle.font = Font.systemFont(11);
 subtitle.textColor = textSecondary;
 
-w.addSpacer(12);
+w.addSpacer(8);
 
 // ── FILAS DE ESTACIONES
 for (let i = 0; i < results.length; i++) {
   const r = results[i];
 
-  // Contenedor de fila con fondo alternado
   const rowContainer = w.addStack();
   rowContainer.layoutVertically();
-  rowContainer.setPadding(6, 12, 6, 12);
-  rowContainer.cornerRadius = 10;
+  rowContainer.setPadding(5, 10, 5, 10);
+  rowContainer.cornerRadius = 8;
   if (i % 2 === 0) {
     rowContainer.backgroundColor = rowEven;
   }
@@ -258,32 +249,31 @@ for (let i = 0; i < results.length; i++) {
 
   // Indicador de estado (punto)
   const dot = row.addText("●");
-  dot.font = Font.systemFont(8);
+  dot.font = Font.systemFont(6);
   dot.textColor = r.litros > 0 ? colorGreen : colorRed;
 
-  row.addSpacer(8);
+  row.addSpacer(6);
 
   // Nombre estación
   const nameText = row.addText(r.name);
-  nameText.font = Font.mediumSystemFont(15);
+  nameText.font = Font.mediumSystemFont(13);
   nameText.textColor = textPrimary;
   nameText.lineLimit = 1;
 
   row.addSpacer();
 
-  // Litros (más grande y bold)
+  // Litros
   const litrosText = row.addText(
     r.litros > 0
       ? `${r.litros.toLocaleString("es-BO")} Lts`
       : "Sin dato"
   );
-  litrosText.font = Font.semiboldSystemFont(18);
+  litrosText.font = Font.semiboldSystemFont(14);
   litrosText.textColor = r.litros > 0 ? textPrimary : colorRed;
   litrosText.lineLimit = 1;
 
-  // Separador sutil entre filas (excepto última)
   if (i < results.length - 1) {
-    w.addSpacer(2);
+    w.addSpacer(1);
   }
 }
 
@@ -298,7 +288,7 @@ const hh = String(now.getHours()).padStart(2, "0");
 const mm = String(now.getMinutes()).padStart(2, "0");
 
 const meta = metaStack.addText(`Consulta ${hh}:${mm}`);
-meta.font = Font.systemFont(11);
+meta.font = Font.systemFont(10);
 meta.textColor = textSecondary;
 
 metaStack.addSpacer();
@@ -307,7 +297,7 @@ const countAvail = results.filter((r) => r.litros > 0).length;
 const avail = metaStack.addText(
   `${countAvail}/${results.length} disponibles`
 );
-avail.font = Font.systemFont(11);
+avail.font = Font.systemFont(10);
 avail.textColor = countAvail === results.length ? colorGreen : textSecondary;
 
 /***********************
