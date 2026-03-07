@@ -10,22 +10,7 @@ const CHART_URL =
 const PRODUCT = "ESPECIAL";
 
 /***********************
- * FETCH
- ***********************/
-const req = new Request(CHART_URL);
-req.timeoutInterval = 15;
-req.headers = {
-  "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS like Mac OS X)",
-  Accept: "text/html,*/*",
-};
-
-let html = "";
-try {
-  html = await req.loadString();
-} catch (_) {}
-
-/***********************
- * PARSEO
+ * HELPERS
  ***********************/
 function normalizeLiters(raw) {
   if (!raw) return 0;
@@ -33,55 +18,47 @@ function normalizeLiters(raw) {
   return digits ? Number(digits) : 0;
 }
 
-function parseChartIframe(html, product) {
-  if (!html) return 0;
+/***********************
+ * FETCH via WebView
+ ***********************/
+async function fetchChartData(url, product) {
   const upper = product.toUpperCase();
-
-  // Strategy 1: find setResponse({...}) with table data
-  const jsonMatch = html.match(/setResponse\(([\s\S]+?)\);/);
-  if (jsonMatch) {
-    try {
-      const data = JSON.parse(jsonMatch[1]);
-      const rows = data?.table?.rows;
-      if (rows) {
-        for (const row of rows) {
-          const cells = row.c || [];
-          const hasProduct = cells.some(
-            (c) => typeof c?.v === "string" && c.v.toUpperCase().includes(upper)
-          );
-          if (!hasProduct) continue;
-          for (const c of cells) {
-            if (typeof c?.v === "number" && c.v > 0) return Math.round(c.v);
+  try {
+    const wv = new WebView();
+    await wv.loadURL(url);
+    const text = await wv.evaluateJavaScript(
+      `completion(document.body.innerText);`,
+      true
+    );
+    if (!text) return 0;
+    const lines = text.split("\n");
+    let best = 0;
+    let found = false;
+    for (const line of lines) {
+      if (line.toUpperCase().includes(upper)) found = true;
+      if (found) {
+        const nums = line.match(/[\d]+(?:[.,]\d{3})*/g);
+        if (nums) {
+          for (const n of nums) {
+            const val = normalizeLiters(n);
+            if (val > best) best = val;
           }
         }
+        if (best > 0) return best;
       }
-    } catch (_) {}
+    }
+    const re = new RegExp(
+      `${upper}[\\s\\S]{0,200}?(\\d{1,3}(?:[,.]\\d{3})+|\\d{4,})`,
+      "i"
+    );
+    const m = text.match(re);
+    return m ? normalizeLiters(m[1]) : 0;
+  } catch (_) {
+    return 0;
   }
-
-  // Strategy 2: find data arrays like ["ESPECIAL",55000]
-  const re = new RegExp(
-    `["']([^"']*${upper}[^"']*)["'][\\s,]*[,\\]]\\s*(\\d[\\d.,]*)`,
-    "i"
-  );
-  const m = html.match(re);
-  if (m) return normalizeLiters(m[2]);
-
-  // Strategy 3: brute force - product name near a number
-  const clean = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
-  const re2 = new RegExp(
-    `${upper}[\\s\\S]{0,80}?(\\d{1,3}(?:[.,]\\d{3})*(?:\\.\\d+)?)`,
-    "i"
-  );
-  const m2 = clean.match(re2);
-  if (m2) {
-    const val = normalizeLiters(m2[1]);
-    if (val >= 100) return val;
-  }
-
-  return 0;
 }
 
-const litros = parseChartIframe(html, PRODUCT);
+const litros = await fetchChartData(CHART_URL, PRODUCT);
 const now = new Date();
 
 /***********************
@@ -139,7 +116,7 @@ if (litros === 0) {
 }
 
 /***********************
- * PRESENTACION
+ * PRESENTACIÓN
  ***********************/
 if (config.runsInWidget) {
   Script.setWidget(w);
