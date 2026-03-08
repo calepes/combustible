@@ -6,7 +6,7 @@
 
 var REPO_OWNER = "calepes";
 var REPO_NAME = "Widget-combustible";
-var BRANCH = "claude/review-fuel-widget-sbRss";
+var BRANCH = "claude/load-cards-v2-UThuf";
 var FILE = "all-stations-widget.js";
 
 var API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + FILE + "?ref=" + encodeURIComponent(BRANCH);
