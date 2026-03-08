@@ -314,7 +314,7 @@ headerStack.centerAlignContent();
 const titleCol = headerStack.addStack();
 titleCol.layoutVertically();
 
-const header = titleCol.addText("Combustible (test)");
+const header = titleCol.addText("Combustible");
 header.font = Font.boldSystemFont(16);
 header.textColor = textPrimary;
 
