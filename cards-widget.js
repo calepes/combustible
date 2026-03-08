@@ -291,7 +291,7 @@ const MAX_ITEMS = 8;
 const COLS = 2;
 const ROWS = Math.ceil(MAX_ITEMS / COLS);
 const WIDGET_PAD = 16;
-const CARD_GAP = 10;
+const CARD_GAP = 24;
 
 // Top 8 stations
 const top = results.slice(0, MAX_ITEMS);
