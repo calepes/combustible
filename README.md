@@ -4,24 +4,42 @@ Widget de [Scriptable](https://scriptable.app/) para iOS que muestra la disponib
 
 ## Estaciones monitoreadas
 
-| Estación | Empresa | Fuente |
-|----------|---------|--------|
-| Genex Banzer | Genex | genex.com.bo |
-| Vangas | Genex | genex.com.bo |
-| Urubó | Orsa | gasgroup.com.bo |
-| Equipetrol | Biopetrol | ec2 API |
-| Pirai | Biopetrol | ec2 API |
-| Alemana | Biopetrol | ec2 API |
-| López | Biopetrol | ec2 API |
-| Viru Viru | Biopetrol | ec2 API |
+| Estación | Empresa | Fuente | Tipo |
+|----------|---------|--------|------|
+| Genex Banzer | Genex | genex.com.bo | HTML scraping |
+| Vangas | Genex | genex.com.bo | HTML scraping |
+| Urubó | Orsa | gasgroup.com.bo | API JSON |
+| Equipetrol | Biopetrol | ec2 API | HTML scraping |
+| Pirai | Biopetrol | ec2 API | HTML scraping |
+| Alemana | Biopetrol | ec2 API | HTML scraping |
+| López | Biopetrol | ec2 API | HTML scraping |
+| Viru Viru | Biopetrol | ec2 API | HTML scraping |
+| Gasco | Biopetrol | ec2 API | HTML scraping |
+| Rivero | Rivero | Google Sheets | Chart JSON parsing |
 
 ## Funcionalidad
 
 - Consulta en tiempo real los litros disponibles de cada estación
 - Widget tamaño **Large** con todas las estaciones ordenadas por disponibilidad
-- Indicador visual (verde/rojo) por estación
+- Indicador visual (punto verde/rojo) por estación
+- Nombre de estación, empresa y litros disponibles en cada fila
+- Separadores visuales entre filas a ancho completo
 - Hora de última consulta y contador de estaciones disponibles
 - Soporte para modo claro y oscuro
+- **Navegación con Waze**: al tocar el widget se muestra un menú para navegar directamente a cualquier estación
+- Vista previa del widget al tocar antes del menú de navegación
+- Umbral mínimo de 1,500 Lts para datos de Gasgroup/Orsa (filtra datos poco confiables)
+- Caché de requests HTTP/JSON para evitar consultas duplicadas a la misma URL
+- Español neutro en toda la interfaz
+
+## Fuentes de datos
+
+| Tipo | Método | Estaciones |
+|------|--------|------------|
+| `genex` | Scraping HTML de genex.com.bo | Genex Banzer, Vangas |
+| `ec2` | Scraping HTML de API Biopetrol (EC2) | Equipetrol, Pirai, Alemana, López, Viru Viru, Gasco |
+| `gasgroup` | API JSON de gasgroup.com.bo | Urubó |
+| `gsheets` | Parsing de chartJson embebido en Google Sheets | Rivero |
 
 ## Archivos
 
@@ -29,8 +47,13 @@ Widget de [Scriptable](https://scriptable.app/) para iOS que muestra la disponib
 |---------|-------------|
 | `all-stations-widget.js` | Widget principal con todas las estaciones |
 | `loader-combustible.js` | Loader que descarga y ejecuta el widget desde GitHub |
+| `loader-test.js` | Loader de pruebas |
 | `fuel-widget.js` | Widget original (solo Genex Banzer, tamaño pequeño) |
-| `Equipetrol/`, `Pirai/`, `Urubo/`, `Vangas/` | Widgets individuales por estación |
+| `Equipetrol/` | Widget individual — Equipetrol |
+| `Pirai/` | Widget individual — Pirai |
+| `Urubo/` | Widget individual — Urubó |
+| `Vangas/` | Widget individual — Vangas |
+| `Rivero/` | Widget individual — Rivero |
 
 ## Instalación
 
@@ -98,3 +121,8 @@ await eval("(async () => { " + code + " })()");
 4. Seleccionar el script creado en la configuración del widget
 
 El loader descarga automáticamente la última versión del widget desde este repositorio. Si no hay conexión, usa la copia local en caché.
+
+## Uso
+
+- **En Home Screen**: el widget se actualiza automáticamente mostrando disponibilidad de todas las estaciones
+- **Al tocar el widget**: muestra una vista previa actualizada y luego un menú para navegar con Waze a la estación seleccionada
