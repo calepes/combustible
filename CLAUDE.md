@@ -7,7 +7,7 @@ Widget de Scriptable (iOS) que muestra disponibilidad de Gasolina Especial en es
 ## Key files
 
 - `all-stations-widget.js` — Widget principal con todas las estaciones (Large widget)
-- `cards-widget.js` — Widget alternativo con diseño de tarjetas en grid 2x2
+- `cards-widget.js` — Widget alternativo con diseño de tarjetas en grid 2x2 **(solo en rama cardsv2)**
 - `fuel-widget.js` — Widget original (solo Genex Banzer, tamaño pequeño)
 - `loader-combustible.js` — Loader que descarga y ejecuta el widget desde GitHub
 - `loader-test.js` — Loader de pruebas
@@ -78,6 +78,25 @@ Toda decisión de diseño debe seguir las [Apple Human Interface Guidelines para
 - **Clarity**: interfaz legible, jerarquía visual clara
 - **Deference**: el contenido del usuario es protagonista
 - **Depth**: capas visuales para navegación intuitiva
+
+## Branch context
+
+### Ramas activas
+- **`claude/review-fuel-widget-sbRss`** (esta rama) — Widget de lista (`all-stations-widget.js`). Colores originales iOS (`#34C759` verde, `#FF3B30` rojo, `#0A84FF` azul). Sin `cards-widget.js`. Sin distancias GPS.
+- **`claude/cardsv2-sbRss`** — Rama principal de desarrollo del cards widget. Contiene:
+  - `cards-widget.js` con diseño de tarjetas grid 2x2 (Apple HIG)
+  - Paleta Ocean Blue (`#3B82F6` acento, `#60A5FA` barra)
+  - Color de distancia dinámico (verde→naranja→rojo según km, rango 0–15 km)
+  - Distancias reales por ruta via OSRM API
+  - Ordenamiento por cercanía con GPS del usuario
+  - `loader-test.js` apunta a esta rama
+- **`claude/cards-sbRss`** — Versión anterior del cards widget (sin distancias, sin OSRM, paleta original)
+- **`main`** — Versión estable con `all-stations-widget.js` solamente
+
+### Historial de esta sesión (2026-03-08)
+- Se propusieron 6 paletas de colores para cards widget
+- Se aplicó Purple/Indigo a esta rama pero se revirtió (usuario pidió dejarla como estaba)
+- Se eligió **Ocean Blue** + distancia dinámica para cardsv2
 
 ## Testing
 

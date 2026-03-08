@@ -2,6 +2,12 @@
 
 Registro de cambios del Widget Combustible.
 
+## [1.5.1] - 2026-03-08
+
+### Nota
+- Se probó paleta Purple/Indigo en esta rama pero se revirtió — colores originales iOS restaurados
+- El desarrollo de UI activo continúa en rama `claude/cardsv2-sbRss` con `cards-widget.js`
+
 ## [1.5.0] - 2026-03-08
 
 ### Mejorado
