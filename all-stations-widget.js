@@ -322,7 +322,7 @@ const sepColor = Color.dynamic(
 );
 const headerSep = w.addStack();
 headerSep.layoutHorizontally();
-const headerLine = headerSep.addText("─".repeat(50));
+const headerLine = headerSep.addText("─".repeat(200));
 headerLine.font = Font.systemFont(4);
 headerLine.textColor = sepColor;
 
@@ -375,14 +375,12 @@ for (let i = 0; i < results.length; i++) {
     w.addSpacer(3);
     const sepLine = w.addStack();
     sepLine.layoutHorizontally();
-    sepLine.addSpacer(20);
-    const line = sepLine.addText("─".repeat(50));
+    const line = sepLine.addText("─".repeat(200));
     line.font = Font.systemFont(3);
     line.textColor = Color.dynamic(
       new Color("#C7C7CC"),
       new Color("#48484A")
     );
-    sepLine.addSpacer(4);
     w.addSpacer(3);
   }
 }
@@ -413,10 +411,14 @@ avail.textColor = countAvail === results.length ? colorGreen : textSecondary;
 /***********************
  * PRESENTACIÓN
  ***********************/
+Script.setWidget(w);
+
 if (config.runsInWidget) {
-  Script.setWidget(w);
+  // En home screen: solo actualizar datos
 } else {
-  // Menú interactivo: seleccionar estación → abrir en Waze
+  // Al tocar: mostrar widget actualizado y luego menú Waze
+  await w.presentLarge();
+
   const alert = new Alert();
   alert.title = "Navegar a estación";
   alert.message = "Selecciona una estación para abrir en Waze";
