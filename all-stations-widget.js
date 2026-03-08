@@ -166,6 +166,8 @@ function parseEC2(html, key) {
   return m ? normalizeLiters(m[1]) : 0;
 }
 
+const GASGROUP_MIN_LITROS = 1500;
+
 function parseGasGroup(json, product) {
   if (!json?.data?.tanques) return 0;
   let total = 0;
@@ -174,7 +176,8 @@ function parseGasGroup(json, product) {
       total += t.volumen || 0;
     }
   }
-  return Math.round(total);
+  const rounded = Math.round(total);
+  return rounded >= GASGROUP_MIN_LITROS ? rounded : 0;
 }
 
 function parseChartJson(html, product) {
@@ -319,7 +322,7 @@ const sepColor = Color.dynamic(
 );
 const headerSep = w.addStack();
 headerSep.layoutHorizontally();
-const headerLine = headerSep.addText("─".repeat(100));
+const headerLine = headerSep.addText("─".repeat(50));
 headerLine.font = Font.systemFont(4);
 headerLine.textColor = sepColor;
 
@@ -373,7 +376,7 @@ for (let i = 0; i < results.length; i++) {
     const sepLine = w.addStack();
     sepLine.layoutHorizontally();
     sepLine.addSpacer(20);
-    const line = sepLine.addText("─".repeat(100));
+    const line = sepLine.addText("─".repeat(50));
     line.font = Font.systemFont(3);
     line.textColor = Color.dynamic(
       new Color("#C7C7CC"),

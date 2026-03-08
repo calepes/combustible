@@ -25,6 +25,7 @@ try {
 /***********************
  * EXTRACCIÓN
  ***********************/
+const GASGROUP_MIN_LITROS = 1500;
 let litros = 0;
 
 if (json?.data?.tanques) {
@@ -36,6 +37,7 @@ if (json?.data?.tanques) {
 }
 
 litros = Math.round(litros);
+if (litros < GASGROUP_MIN_LITROS) litros = 0;
 
 /***********************
  * HORA DE CONSULTA
