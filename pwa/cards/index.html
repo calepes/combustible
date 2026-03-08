@@ -545,6 +545,13 @@
 
     refreshBtn.addEventListener('click', loadData);
 
+    // Reload data when returning to the app (e.g. after opening Waze)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        loadData();
+      }
+    });
+
     // Initial load
     loadData();
 
