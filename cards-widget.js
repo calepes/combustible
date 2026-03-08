@@ -289,13 +289,22 @@ const cardBg = Color.dynamic(
  ***********************/
 const COLS = 2;
 const ROWS = 5;
+const CARD_SPACING = 8;
+const WIDGET_PAD = 12;
+
+// Calculate card size based on device screen
+const screenW = Device.screenSize().width;
+const widgetW = screenW - 32; // system inset ~16 each side
+const innerW = widgetW - WIDGET_PAD * 2;
+const cardW = Math.floor((innerW - CARD_SPACING) / COLS);
+const cardH = 62;
 
 const w = new ListWidget();
 w.backgroundColor = Color.dynamic(
   new Color("#FFFFFF"),
   new Color("#000000")
 );
-w.setPadding(10, 10, 8, 10);
+w.setPadding(10, WIDGET_PAD, 8, WIDGET_PAD);
 
 // ── HEADER
 const headerStack = w.addStack();
@@ -315,7 +324,7 @@ w.addSpacer(8);
 for (let row = 0; row < ROWS; row++) {
   const rowStack = w.addStack();
   rowStack.layoutHorizontally();
-  rowStack.spacing = 8;
+  rowStack.spacing = CARD_SPACING;
 
   for (let col = 0; col < COLS; col++) {
     const idx = row * COLS + col;
@@ -324,13 +333,13 @@ for (let row = 0; row < ROWS; row++) {
       const r = results[idx];
       const available = r.litros > 0;
 
-      // Card container
+      // Card container – fixed size for uniform grid
       const card = rowStack.addStack();
       card.layoutVertically();
       card.backgroundColor = cardBg;
       card.cornerRadius = 10;
       card.setPadding(8, 10, 8, 10);
-      card.size = new Size(0, 0); // flexible
+      card.size = new Size(cardW, cardH);
 
       // Top row: dot + name
       const topRow = card.addStack();
@@ -355,7 +364,7 @@ for (let row = 0; row < ROWS; row++) {
       companyText.textColor = textSecondary;
       companyText.lineLimit = 1;
 
-      card.addSpacer(4);
+      card.addSpacer();
 
       // Liters
       const litrosStr = available
@@ -367,13 +376,14 @@ for (let row = 0; row < ROWS; row++) {
       litrosText.lineLimit = 1;
       litrosText.minimumScaleFactor = 0.6;
     } else {
-      // Empty placeholder to keep grid aligned
-      rowStack.addSpacer();
+      // Empty placeholder – same size to keep grid aligned
+      const placeholder = rowStack.addStack();
+      placeholder.size = new Size(cardW, cardH);
     }
   }
 
   if (row < ROWS - 1) {
-    w.addSpacer(6);
+    w.addSpacer(4);
   }
 }
 
