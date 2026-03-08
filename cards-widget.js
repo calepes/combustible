@@ -285,96 +285,102 @@ const cardBg = Color.dynamic(
 );
 
 /***********************
- * WIDGET LARGE – STATS
+ * WIDGET LARGE – CARDS
+ * Diseño basado en Apple HIG Widgets
  ***********************/
 const MAX_ITEMS = 8;
 const COLS = 2;
 const ROWS = Math.ceil(MAX_ITEMS / COLS);
 const WIDGET_PAD = 16;
+const CARD_PAD = 10;
+const CARD_RADIUS = 14;
+const CARD_GAP = 8;
 
-// Top 8 stations
 const top = results.slice(0, MAX_ITEMS);
 
-// Accent colors
 const accentBlue = new Color("#0A84FF");
-const accentCyan = new Color("#64D2FF");
-const separatorColor = Color.dynamic(
-  new Color("#E5E5EA"),
-  new Color("#38383A")
-);
 
 const w = new ListWidget();
 w.backgroundColor = Color.dynamic(
   new Color("#FFFFFF"),
   new Color("#000000")
 );
-w.setPadding(14, WIDGET_PAD, 10, WIDGET_PAD);
+w.setPadding(WIDGET_PAD, WIDGET_PAD, 12, WIDGET_PAD);
 
-// ── HEADER
+// ── HEADER ─────────────────────────────
 const headerStack = w.addStack();
 headerStack.layoutHorizontally();
 headerStack.centerAlignContent();
-
-const fuelIcon = headerStack.addText("⛽");
-fuelIcon.font = Font.systemFont(22);
-
-headerStack.addSpacer(8);
 
 const titleCol = headerStack.addStack();
 titleCol.layoutVertically();
 
 const header = titleCol.addText("Combustible");
-header.font = Font.boldRoundedSystemFont(20);
+header.font = Font.boldRoundedSystemFont(22);
 header.textColor = textPrimary;
 
 const subtitle = titleCol.addText("Gasolina Especial · Santa Cruz");
-subtitle.font = Font.systemFont(11);
+subtitle.font = Font.systemFont(12);
 subtitle.textColor = textSecondary;
 
 headerStack.addSpacer();
 
-// Badge – con stock count
+// Badge – estaciones con stock
 const countAvail = top.filter((r) => r.litros > 0).length;
 const badge = headerStack.addStack();
 badge.layoutHorizontally();
 badge.centerAlignContent();
-badge.backgroundColor = new Color("#0A84FF", 0.15);
-badge.cornerRadius = 10;
-badge.setPadding(4, 8, 4, 8);
+badge.backgroundColor = new Color("#0A84FF", 0.12);
+badge.cornerRadius = 12;
+badge.setPadding(4, 10, 4, 10);
 
 const badgeText = badge.addText(`${countAvail}/${top.length}`);
-badgeText.font = Font.boldRoundedSystemFont(13);
+badgeText.font = Font.boldRoundedSystemFont(14);
 badgeText.textColor = accentBlue;
 
 w.addSpacer(12);
 
-// ── STATS GRID (2 columns x 4 rows)
-function addCell(parent, r) {
-  const cell = parent.addStack();
-  cell.layoutVertically();
-  cell.spacing = 2;
+// ── GRID DE TARJETAS (2 columnas × 4 filas) ──
+function addCard(parent, r) {
+  const card = parent.addStack();
+  card.layoutVertically();
+  card.backgroundColor = cardBg;
+  card.cornerRadius = CARD_RADIUS;
+  card.setPadding(CARD_PAD, CARD_PAD, CARD_PAD, CARD_PAD);
 
   const available = r.litros > 0;
 
-  // Label: STATION NAME
-  const label = cell.addText(r.name.toUpperCase());
-  label.font = Font.boldSystemFont(10);
-  label.textColor = accentBlue;
+  // Fila superior: nombre + indicador de estado
+  const topRow = card.addStack();
+  topRow.layoutHorizontally();
+  topRow.centerAlignContent();
+
+  const label = topRow.addText(r.name);
+  label.font = Font.semiboldSystemFont(13);
+  label.textColor = textPrimary;
   label.lineLimit = 1;
   label.minimumScaleFactor = 0.8;
 
-  // Number + unit
-  const numRow = cell.addStack();
+  topRow.addSpacer();
+
+  const dot = topRow.addText("●");
+  dot.font = Font.systemFont(8);
+  dot.textColor = available ? colorGreen : colorRed;
+
+  card.addSpacer(4);
+
+  // Número de litros (dato principal — jerarquía HIG)
+  const numRow = card.addStack();
   numRow.layoutHorizontally();
-  numRow.centerAlignContent();
-  numRow.spacing = 4;
+  numRow.bottomAlignContent();
+  numRow.spacing = 3;
 
   const numStr = available
     ? r.litros.toLocaleString("es-BO")
-    : "—";
+    : "Sin dato";
   const numText = numRow.addText(numStr);
-  numText.font = Font.boldRoundedSystemFont(22);
-  numText.textColor = available ? textPrimary : colorRed;
+  numText.font = Font.boldRoundedSystemFont(available ? 22 : 14);
+  numText.textColor = available ? textPrimary : textSecondary;
   numText.lineLimit = 1;
   numText.minimumScaleFactor = 0.6;
 
@@ -384,9 +390,11 @@ function addCell(parent, r) {
     unitText.textColor = textSecondary;
   }
 
-  // Company subtitle
-  const sub = cell.addText(r.company);
-  sub.font = Font.systemFont(10);
+  card.addSpacer(2);
+
+  // Empresa (info secundaria)
+  const sub = card.addText(r.company);
+  sub.font = Font.systemFont(11);
   sub.textColor = textSecondary;
   sub.lineLimit = 1;
 }
@@ -397,40 +405,30 @@ for (let row = 0; row < ROWS; row++) {
 
   const rowStack = w.addStack();
   rowStack.layoutHorizontally();
+  rowStack.spacing = CARD_GAP;
 
-  // Left cell
+  // Tarjeta izquierda
   if (leftIdx < top.length) {
-    addCell(rowStack, top[leftIdx]);
-  }
-
-  // Flexible spacer distributes space evenly
-  rowStack.addSpacer();
-
-  // Right cell
-  if (rightIdx < top.length) {
-    addCell(rowStack, top[rightIdx]);
+    addCard(rowStack, top[leftIdx]);
   } else {
     rowStack.addSpacer();
   }
 
-  // Separator between rows
+  // Tarjeta derecha
+  if (rightIdx < top.length) {
+    addCard(rowStack, top[rightIdx]);
+  } else {
+    rowStack.addSpacer();
+  }
+
+  // Espacio entre filas
   if (row < ROWS - 1) {
-    w.addSpacer(6);
-    const sep = w.addStack();
-    sep.backgroundColor = separatorColor;
-    sep.size = new Size(0, 0.5);
-    w.addSpacer(6);
+    w.addSpacer(CARD_GAP);
   }
 }
 
-// ── FOOTER
+// ── FOOTER ─────────────────────────────
 w.addSpacer();
-
-const sep2 = w.addStack();
-sep2.backgroundColor = separatorColor;
-sep2.size = new Size(0, 0.5);
-
-w.addSpacer(6);
 
 const footerStack = w.addStack();
 footerStack.layoutHorizontally();
@@ -440,27 +438,10 @@ const hh = String(now.getHours()).padStart(2, "0");
 const mm = String(now.getMinutes()).padStart(2, "0");
 
 const meta = footerStack.addText(`Actualizado ${hh}:${mm}`);
-meta.font = Font.mediumSystemFont(10);
+meta.font = Font.mediumSystemFont(11);
 meta.textColor = textSecondary;
 
 footerStack.addSpacer();
-
-const liveStack = footerStack.addStack();
-liveStack.layoutHorizontally();
-liveStack.centerAlignContent();
-liveStack.backgroundColor = new Color("#34C759", 0.15);
-liveStack.cornerRadius = 8;
-liveStack.setPadding(3, 6, 3, 6);
-
-const liveDot = liveStack.addText("●");
-liveDot.font = Font.systemFont(6);
-liveDot.textColor = colorGreen;
-
-liveStack.addSpacer(3);
-
-const liveLabel = liveStack.addText("EN VIVO");
-liveLabel.font = Font.boldSystemFont(9);
-liveLabel.textColor = colorGreen;
 
 /***********************
  * PRESENTACIÓN
