@@ -18,8 +18,8 @@ Cada loader descarga y ejecuta un widget desde una rama específica de GitHub. U
 | Loader | Rama | Archivo | Caché | Icono | Uso |
 |--------|------|---------|-------|-------|-----|
 | `loader-combustible.js` | `main` | `all-stations-widget.js` | `combustible-cache/` | naranja | Producción |
-| `loader-test.js` | `claude/cardsv2-sbRss` | `cards-widget.js` | `combustible-cache-test/` | naranja | Pruebas cards widget |
-| `loader-review.js` | `claude/review-fuel-widget-sbRss` | `all-stations-widget.js` | `combustible-cache-review/` | verde | Pruebas list widget |
+| `loader-test.js` | `test` | `all-stations-widget.js` | `combustible-cache-test/` | naranja | Pruebas list widget |
+| `loader-cards.js` | `cards-v2` | `cards-widget.js` | `combustible-cache-cards/` | verde | Pruebas cards widget |
 
 ## Tech stack
 
@@ -32,7 +32,7 @@ Cada loader descarga y ejecuta un widget desde una rama específica de GitHub. U
 
 - Widgets use Scriptable's `ListWidget` API with horizontal/vertical stacks for layout
 - No npm, no bundler — each `.js` file is a standalone Scriptable script
-- El patrón loader descarga el widget desde GitHub y lo cachea en iCloud. Hay tres loaders independientes (ver tabla en Key files), cada uno apuntando a una rama y archivo distinto con su propio directorio de caché
+- El patrón loader descarga el widget desde GitHub y lo cachea en iCloud. Hay tres loaders (ver tabla en Key files): producción (`main`), test (`test`), y cards (`cards-v2`), cada uno con su propio directorio de caché
 - Widget sizes are Large; layout must work across iPhone screen sizes
 - Support for both light and dark mode via `Color.dynamic()`
 - Navigation to stations via Waze deep links
@@ -89,17 +89,10 @@ Toda decisión de diseño debe seguir las [Apple Human Interface Guidelines para
 
 ## Branch context
 
-### Ramas activas
-- **`claude/cardsv2-sbRss`** — Rama principal de desarrollo del cards widget. Contiene:
-  - `cards-widget.js` con diseño de tarjetas grid 2x2 (Apple HIG)
-  - Paleta **Ocean Blue** (`#3B82F6` acento, `#60A5FA` barra)
-  - Color de distancia dinámico (verde→naranja→rojo según km)
-  - Distancias reales por ruta via OSRM API
-  - Ordenamiento por cercanía con GPS del usuario
-  - `loader-test.js` apunta a esta rama (caché: `combustible-cache-test/`)
-- **`claude/review-fuel-widget-sbRss`** — Widget de lista (`all-stations-widget.js`). Colores originales iOS. Sin `cards-widget.js`. `loader-review.js` apunta a esta rama (caché: `combustible-cache-review/`).
-- **`claude/cards-sbRss`** — Versión anterior del cards widget (sin distancias, sin OSRM, paleta original)
-- **`main`** — Versión estable con `all-stations-widget.js` solamente. `loader-combustible.js` apunta a esta rama (caché: `combustible-cache/`)
+### Ramas
+- **`main`** — Producción. Widget de lista HIG (`all-stations-widget.js`). Título: "Combustible"
+- **`test`** — Pruebas pre-producción. Mismo widget de lista, título: "Combustible (test)"
+- **`cards-v2`** — Experimento de layout cards grid (`cards-widget.js`)
 
 ### Paleta de colores actual (cardsv2)
 - Acento/badge: `#3B82F6` (ocean blue)
@@ -119,8 +112,8 @@ No automated tests. Para probar cambios en desarrollo:
 
 1. Hacer push a la rama correspondiente
 2. En Scriptable, ejecutar el loader asociado a esa rama:
-   - Cards widget → ejecutar `loader-test.js` (descarga de `claude/cardsv2-sbRss`)
-   - List widget → ejecutar `loader-review.js` (descarga de `claude/review-fuel-widget-sbRss`)
+   - List widget (test) → ejecutar `loader-test.js` (descarga de `test`)
+   - Cards widget → ejecutar `loader-cards.js` (descarga de `cards-v2`)
 3. El loader descarga automáticamente la última versión y la ejecuta
 4. Verificar layout, datos, modo claro/oscuro y navegación Waze
 

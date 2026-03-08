@@ -6,14 +6,14 @@
 
 var REPO_OWNER = "calepes";
 var REPO_NAME = "Widget-combustible";
-var BRANCH = "claude/cardsv2-sbRss";
-var FILE = "cards-widget.js";
+var BRANCH = "test";
+var FILE = "all-stations-widget.js";
 
 var API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + FILE + "?ref=" + encodeURIComponent(BRANCH);
 
 var fm = FileManager.iCloud();
 var dir = fm.joinPath(fm.documentsDirectory(), "combustible-cache-test");
-var localPath = fm.joinPath(dir, "cards-widget.js");
+var localPath = fm.joinPath(dir, "all-stations-widget.js");
 
 if (!fm.fileExists(dir)) {
   fm.createDirectory(dir, true);

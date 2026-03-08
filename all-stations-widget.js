@@ -304,7 +304,7 @@ w.backgroundColor = Color.dynamic(
   new Color("#F2F2F7"),
   new Color("#000000")
 );
-w.setPadding(16, 16, 12, 16);
+w.setPadding(12, 16, 8, 16);
 
 // ── HEADER ─────────────────────────────
 const headerStack = w.addStack();
@@ -331,13 +331,13 @@ pill.layoutHorizontally();
 pill.centerAlignContent();
 pill.backgroundColor = new Color(systemBlue.hex, 0.12);
 pill.cornerRadius = 10;
-pill.setPadding(3, 8, 3, 8);
+pill.setPadding(2, 7, 2, 7);
 
 const pillText = pill.addText(`${countAvail}/${results.length}`);
-pillText.font = Font.boldSystemFont(13);
+pillText.font = Font.boldSystemFont(12);
 pillText.textColor = systemBlue;
 
-w.addSpacer(10);
+w.addSpacer(6);
 
 // ── CONTENEDOR DE LISTA (fondo tarjeta) ──
 const listCard = w.addStack();
@@ -347,7 +347,7 @@ listCard.backgroundColor = Color.dynamic(
   new Color("#1C1C1E")
 );
 listCard.cornerRadius = 12;
-listCard.setPadding(4, 12, 4, 12);
+listCard.setPadding(2, 10, 2, 10);
 
 for (let i = 0; i < results.length; i++) {
   const r = results[i];
@@ -355,7 +355,7 @@ for (let i = 0; i < results.length; i++) {
   const row = listCard.addStack();
   row.layoutHorizontally();
   row.centerAlignContent();
-  row.setPadding(8, 0, 8, 0);
+  row.setPadding(6, 0, 6, 0);
 
   // Indicador de estado (punto)
   const dot = row.addText("●");
@@ -366,7 +366,7 @@ for (let i = 0; i < results.length; i++) {
 
   // Nombre estación
   const nameText = row.addText(r.name);
-  nameText.font = Font.semiboldSystemFont(14);
+  nameText.font = Font.semiboldSystemFont(13);
   nameText.textColor = textPrimary;
   nameText.lineLimit = 1;
   nameText.minimumScaleFactor = 0.8;
@@ -386,7 +386,7 @@ for (let i = 0; i < results.length; i++) {
     ? `${r.litros.toLocaleString("es-BO")} L`
     : "Sin dato";
   const litrosText = row.addText(litrosStr);
-  litrosText.font = Font.mediumSystemFont(14);
+  litrosText.font = Font.mediumSystemFont(13);
   litrosText.textColor = r.litros > 0 ? textPrimary : colorRed;
   litrosText.lineLimit = 1;
 
