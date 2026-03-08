@@ -374,7 +374,7 @@ for (let row = 0; row < ROWS; row++) {
       const card = rowStack.addStack();
       card.layoutVertically();
       card.backgroundColor = cardBg;
-      card.cornerRadius = 16;
+      card.cornerRadius = 20;
       card.setPadding(8, 10, 8, 10);
       card.size = new Size(cardW, cardH);
 
@@ -385,13 +385,13 @@ for (let row = 0; row < ROWS; row++) {
 
       // Rank number
       const rankText = topRow.addText(`${idx + 1}`);
-      rankText.font = Font.boldRoundedSystemFont(11);
+      rankText.font = Font.boldRoundedSystemFont(12);
       rankText.textColor = idx < 3 ? rankColors[idx] : textSecondary;
 
       topRow.addSpacer(5);
 
       const nameText = topRow.addText(r.name);
-      nameText.font = Font.semiboldRoundedSystemFont(15);
+      nameText.font = Font.semiboldRoundedSystemFont(16);
       nameText.textColor = textPrimary;
       nameText.lineLimit = 1;
       nameText.minimumScaleFactor = 0.7;
@@ -405,7 +405,7 @@ for (let row = 0; row < ROWS; row++) {
 
       // Company
       const companyText = card.addText(r.company);
-      companyText.font = Font.systemFont(9);
+      companyText.font = Font.systemFont(10);
       companyText.textColor = textSecondary;
       companyText.lineLimit = 1;
 
@@ -416,7 +416,7 @@ for (let row = 0; row < ROWS; row++) {
         ? `${r.litros.toLocaleString("es-BO")} L`
         : "Sin dato";
       const litrosText = card.addText(litrosStr);
-      litrosText.font = Font.boldRoundedSystemFont(17);
+      litrosText.font = Font.boldRoundedSystemFont(18);
       litrosText.textColor = available ? textPrimary : colorRed;
       litrosText.lineLimit = 1;
       litrosText.minimumScaleFactor = 0.6;
