@@ -408,7 +408,7 @@ function addCard(parent, r) {
 
   if (pct > 0) {
     const barFill = barTrack.addStack();
-    barFill.backgroundColor = accentBlue;
+    barFill.backgroundColor = new Color("#64D2FF");
     barFill.cornerRadius = 3;
     barFill.size = new Size(Math.max(pct * 120, 6), 6);
   }
