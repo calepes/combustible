@@ -551,6 +551,16 @@
         loadData();
       }
     });
+    // iOS PWA: pageshow fires when app is restored from background
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) {
+        loadData();
+      }
+    });
+    // Fallback: focus event
+    window.addEventListener('focus', () => {
+      loadData();
+    });
 
     // Initial load
     loadData();
