@@ -2,18 +2,18 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-green; icon-glyph: gas-pump;
 
-// LOADER REVIEW - apunta a la rama de review
+// LOADER CARDS - apunta a la rama cards-v2
 
 var REPO_OWNER = "calepes";
 var REPO_NAME = "Widget-combustible";
-var BRANCH = "claude/review-fuel-widget-sbRss";
-var FILE = "all-stations-widget.js";
+var BRANCH = "cards-v2";
+var FILE = "cards-widget.js";
 
 var API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + FILE + "?ref=" + encodeURIComponent(BRANCH);
 
 var fm = FileManager.iCloud();
-var dir = fm.joinPath(fm.documentsDirectory(), "combustible-cache-review");
-var localPath = fm.joinPath(dir, "all-stations-widget.js");
+var dir = fm.joinPath(fm.documentsDirectory(), "combustible-cache-cards");
+var localPath = fm.joinPath(dir, "cards-widget.js");
 
 if (!fm.fileExists(dir)) {
   fm.createDirectory(dir, true);
