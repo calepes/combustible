@@ -276,27 +276,30 @@ async function fetchStation(s) {
   return 0;
 }
 
-// Obtener ubicación y datos de estaciones en paralelo
+// Obtener ubicación primero (puede mostrar diálogo de permisos)
 let userLat = null;
 let userLon = null;
 
-const [stationResults, loc] = await Promise.all([
-  Promise.all(
-    STATIONS.map(async (s) => ({
-      name: s.name,
-      company: s.company,
-      lat: s.lat,
-      lon: s.lon,
-      litros: await fetchStation(s),
-    }))
-  ),
-  Location.current().catch(() => null),
-]);
-
-if (loc) {
-  userLat = loc.latitude;
-  userLon = loc.longitude;
+try {
+  const loc = await Location.current();
+  if (loc) {
+    userLat = loc.latitude;
+    userLon = loc.longitude;
+  }
+} catch (_) {
+  // Sin permiso de ubicación — continuar sin distancia
 }
+
+// Luego obtener datos de estaciones
+const stationResults = await Promise.all(
+  STATIONS.map(async (s) => ({
+    name: s.name,
+    company: s.company,
+    lat: s.lat,
+    lon: s.lon,
+    litros: await fetchStation(s),
+  }))
+);
 
 // Calcular distancia a cada estación
 const results = stationResults.map((r) => ({
