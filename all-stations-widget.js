@@ -370,6 +370,15 @@ const systemBlue = Color.dynamic(
 );
 const colorRed = new Color("#FF3B30");
 const colorGreen = new Color("#34C759");
+
+// Color de distancia: verde (cerca) → naranja → rojo (lejos) en 0–15 km
+function distanceColor(km) {
+  const t = Math.min(km / 15, 1);
+  const r = Math.round(t < 0.5 ? 52 + t * 2 * 199 : 239 + (1 - t) * 2 * 12);
+  const g = Math.round(t < 0.5 ? 211 - t * 2 * 65 : 146 - (t - 0.5) * 2 * 78);
+  const b = Math.round(t < 0.5 ? 153 - t * 2 * 93 : 60 - (t - 0.5) * 2 * (60 - 68));
+  return new Color(`#${r.toString(16).padStart(2,"0")}${g.toString(16).padStart(2,"0")}${b.toString(16).padStart(2,"0")}`);
+}
 const sepColor = Color.dynamic(
   new Color("#C6C6C8"),
   new Color("#38383A")
@@ -458,20 +467,19 @@ for (let i = 0; i < results.length; i++) {
   companyText.textColor = textTertiary;
   companyText.lineLimit = 1;
 
-  row.addSpacer();
-
   // Distancia
   if (r.distKm != null) {
+    row.addSpacer(4);
     const distStr = r.distKm < 1
       ? `${Math.round(r.distKm * 1000)} m`
       : `${r.distKm.toFixed(1)} km`;
     const distText = row.addText(distStr);
     distText.font = Font.systemFont(10);
-    distText.textColor = textSecondary;
+    distText.textColor = distanceColor(r.distKm);
     distText.lineLimit = 1;
-
-    row.addSpacer(6);
   }
+
+  row.addSpacer();
 
   // Litros
   const litrosStr = r.litros > 0
