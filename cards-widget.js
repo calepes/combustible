@@ -129,8 +129,16 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 /***********************
  * FETCH + PARSE
  ***********************/
+// Limpia caracteres invisibles de URLs (problema de copy-paste)
+function sanitizeURL(url) {
+  // Eliminar zero-width spaces, BOM, y otros invisibles
+  return url.replace(/[\u200B\u200C\u200D\uFEFF\u00AD\u2060]/g, "").trim();
+}
+
 async function fetchHTML(url, insecure) {
-  const r = new Request(url);
+  const cleanUrl = sanitizeURL(url);
+  console.log("fetchHTML url: [" + cleanUrl + "]");
+  const r = new Request(cleanUrl);
   r.timeoutInterval = 15;
   if (insecure) r.allowInsecureLoads = true;
   r.headers = {
@@ -139,26 +147,28 @@ async function fetchHTML(url, insecure) {
   };
   try {
     const html = await r.loadString();
-    console.log("fetchHTML OK: " + url.substring(0, 60) + " → " + html.length + " chars");
+    console.log("fetchHTML OK: " + cleanUrl.substring(0, 60) + " → " + html.length + " chars");
     return html;
   } catch (e) {
-    console.log("fetchHTML ERROR: " + url.substring(0, 60) + " → " + e.message);
+    console.log("fetchHTML ERROR: " + cleanUrl.substring(0, 60) + " → " + e.message);
     return "";
   }
 }
 
 async function fetchJSON(url) {
-  const r = new Request(url);
+  const cleanUrl = sanitizeURL(url);
+  console.log("fetchJSON url: [" + cleanUrl + "]");
+  const r = new Request(cleanUrl);
   r.timeoutInterval = 15;
   r.headers = {
     "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS like Mac OS X)",
   };
   try {
     const json = await r.loadJSON();
-    console.log("fetchJSON OK: " + url.substring(0, 60) + " → " + JSON.stringify(json).substring(0, 100));
+    console.log("fetchJSON OK: " + cleanUrl.substring(0, 60) + " → " + JSON.stringify(json).substring(0, 100));
     return json;
   } catch (e) {
-    console.log("fetchJSON ERROR: " + url.substring(0, 60) + " → " + e.message);
+    console.log("fetchJSON ERROR: " + cleanUrl.substring(0, 60) + " → " + e.message);
     return null;
   }
 }
