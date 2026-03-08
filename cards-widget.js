@@ -287,41 +287,68 @@ const cardBg = Color.dynamic(
 /***********************
  * WIDGET LARGE – CARDS
  ***********************/
+const MAX_CARDS = 8;
 const COLS = 2;
-const ROWS = 5;
-const CARD_SPACING = 6;
-const WIDGET_PAD = 12;
+const ROWS = Math.ceil(MAX_CARDS / COLS);
+const CARD_SPACING = 8;
+const WIDGET_PAD = 16;
+
+// Only show top 8 stations by fuel
+const top = results.slice(0, MAX_CARDS);
 
 // Calculate card size based on device screen
 const screenW = Device.screenSize().width;
-const widgetW = screenW - 32; // system inset ~16 each side
+const widgetW = screenW - 32;
 const innerW = widgetW - WIDGET_PAD * 2;
 const cardW = Math.floor((innerW - CARD_SPACING) / COLS);
-const cardH = 54;
+const cardH = 62;
 
 const w = new ListWidget();
 w.backgroundColor = Color.dynamic(
   new Color("#FFFFFF"),
   new Color("#000000")
 );
-w.setPadding(6, WIDGET_PAD, 6, WIDGET_PAD);
+w.setPadding(12, WIDGET_PAD, 10, WIDGET_PAD);
 
 // ── HEADER
 const headerStack = w.addStack();
 headerStack.layoutHorizontally();
-headerStack.bottomAlignContent();
+headerStack.centerAlignContent();
 
-const header = headerStack.addText("Combustible");
-header.font = Font.boldSystemFont(16);
+const fuelIcon = headerStack.addText("⛽");
+fuelIcon.font = Font.systemFont(18);
+
+headerStack.addSpacer(6);
+
+const titleCol = headerStack.addStack();
+titleCol.layoutVertically();
+
+const header = titleCol.addText("Combustible");
+header.font = Font.boldRoundedSystemFont(17);
 header.textColor = textPrimary;
+
+const subtitle = titleCol.addText("Gasolina Especial · Santa Cruz");
+subtitle.font = Font.systemFont(10);
+subtitle.textColor = textSecondary;
 
 headerStack.addSpacer();
 
-const subtitle = headerStack.addText("Especial · Santa Cruz");
-subtitle.font = Font.systemFont(9);
-subtitle.textColor = textSecondary;
+// Live indicator dot
+const liveStack = headerStack.addStack();
+liveStack.layoutHorizontally();
+liveStack.centerAlignContent();
 
-w.addSpacer(6);
+const liveDot = liveStack.addText("●");
+liveDot.font = Font.systemFont(6);
+liveDot.textColor = colorGreen;
+
+liveStack.addSpacer(3);
+
+const liveLabel = liveStack.addText("LIVE");
+liveLabel.font = Font.boldSystemFont(8);
+liveLabel.textColor = colorGreen;
+
+w.addSpacer(10);
 
 // ── GRID DE CARDS
 for (let row = 0; row < ROWS; row++) {
@@ -332,34 +359,49 @@ for (let row = 0; row < ROWS; row++) {
   for (let col = 0; col < COLS; col++) {
     const idx = row * COLS + col;
 
-    if (idx < results.length) {
-      const r = results[idx];
+    if (idx < top.length) {
+      const r = top[idx];
       const available = r.litros > 0;
+
+      // Rank badge color – gold/silver/bronze for top 3
+      const rankColors = [
+        new Color("#FFD700"),
+        new Color("#C0C0C0"),
+        new Color("#CD7F32"),
+      ];
 
       // Card container – fixed size for uniform grid
       const card = rowStack.addStack();
       card.layoutVertically();
       card.backgroundColor = cardBg;
-      card.cornerRadius = 10;
-      card.setPadding(6, 8, 6, 8);
+      card.cornerRadius = 12;
+      card.setPadding(8, 10, 8, 10);
       card.size = new Size(cardW, cardH);
 
-      // Top row: dot + name
+      // Top row: rank + name
       const topRow = card.addStack();
       topRow.layoutHorizontally();
       topRow.centerAlignContent();
 
-      const dot = topRow.addText("●");
-      dot.font = Font.systemFont(8);
-      dot.textColor = available ? colorGreen : colorRed;
+      // Rank number
+      const rankText = topRow.addText(`${idx + 1}`);
+      rankText.font = Font.boldRoundedSystemFont(11);
+      rankText.textColor = idx < 3 ? rankColors[idx] : textSecondary;
 
-      topRow.addSpacer(4);
+      topRow.addSpacer(5);
 
       const nameText = topRow.addText(r.name);
-      nameText.font = Font.semiboldSystemFont(12);
+      nameText.font = Font.semiboldRoundedSystemFont(13);
       nameText.textColor = textPrimary;
       nameText.lineLimit = 1;
       nameText.minimumScaleFactor = 0.7;
+
+      topRow.addSpacer();
+
+      // Status dot
+      const dot = topRow.addText("●");
+      dot.font = Font.systemFont(7);
+      dot.textColor = available ? colorGreen : colorRed;
 
       // Company
       const companyText = card.addText(r.company);
@@ -369,48 +411,53 @@ for (let row = 0; row < ROWS; row++) {
 
       card.addSpacer();
 
-      // Liters
+      // Liters – big number
       const litrosStr = available
-        ? `${r.litros.toLocaleString("es-BO")} Lts`
+        ? `${r.litros.toLocaleString("es-BO")} L`
         : "Sin dato";
       const litrosText = card.addText(litrosStr);
-      litrosText.font = Font.boldSystemFont(14);
+      litrosText.font = Font.boldRoundedSystemFont(15);
       litrosText.textColor = available ? textPrimary : colorRed;
       litrosText.lineLimit = 1;
       litrosText.minimumScaleFactor = 0.6;
     } else {
-      // Empty placeholder – same size to keep grid aligned
       const placeholder = rowStack.addStack();
       placeholder.size = new Size(cardW, cardH);
     }
   }
 
   if (row < ROWS - 1) {
-    w.addSpacer(3);
+    w.addSpacer(6);
   }
 }
 
 // ── FOOTER
 w.addSpacer();
 
-const metaStack = w.addStack();
-metaStack.layoutHorizontally();
+const footerStack = w.addStack();
+footerStack.layoutHorizontally();
+footerStack.centerAlignContent();
 
 const hh = String(now.getHours()).padStart(2, "0");
 const mm = String(now.getMinutes()).padStart(2, "0");
 
-const meta = metaStack.addText(`Consulta ${hh}:${mm}`);
-meta.font = Font.systemFont(9);
+const clockIcon = footerStack.addText("🕐");
+clockIcon.font = Font.systemFont(9);
+
+footerStack.addSpacer(3);
+
+const meta = footerStack.addText(`${hh}:${mm}`);
+meta.font = Font.mediumSystemFont(9);
 meta.textColor = textSecondary;
 
-metaStack.addSpacer();
+footerStack.addSpacer();
 
-const countAvail = results.filter((r) => r.litros > 0).length;
-const avail = metaStack.addText(
-  `${countAvail}/${results.length} disponibles`
+const countAvail = top.filter((r) => r.litros > 0).length;
+const availText = footerStack.addText(
+  `${countAvail}/${top.length} con stock`
 );
-avail.font = Font.systemFont(9);
-avail.textColor = countAvail === results.length ? colorGreen : textSecondary;
+availText.font = Font.mediumSystemFont(9);
+availText.textColor = countAvail === top.length ? colorGreen : textSecondary;
 
 /***********************
  * PRESENTACIÓN
@@ -427,17 +474,17 @@ if (config.runsInWidget) {
   alert.title = "Navegar a estación";
   alert.message = "Selecciona una estación para abrir en Waze";
 
-  for (const r of results) {
+  for (const r of top) {
     const status = r.litros > 0
-      ? `✅ ${r.litros.toLocaleString("es-BO")} Lts`
-      : "❌ Sin dato";
+      ? `${r.litros.toLocaleString("es-BO")} L`
+      : "Sin dato";
     alert.addAction(`${r.name} — ${status}`);
   }
   alert.addCancelAction("Cancelar");
 
   const idx = await alert.presentSheet();
-  if (idx >= 0 && idx < results.length) {
-    const selected = results[idx];
+  if (idx >= 0 && idx < top.length) {
+    const selected = top[idx];
     const station = STATIONS.find((s) => s.name === selected.name);
     if (station?.waze) {
       Safari.open(station.waze);
