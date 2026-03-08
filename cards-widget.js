@@ -132,7 +132,7 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 // Limpia caracteres invisibles de URLs (problema de copy-paste)
 function sanitizeURL(url) {
   // Eliminar zero-width spaces, BOM, y otros invisibles
-  return url.replace(/[\u200B\u200C\u200D\uFEFF\u00AD\u2060]/g, "").trim();
+  return url.replace(/[<>\u200B\u200C\u200D\uFEFF\u00AD\u2060]/g, "").trim();
 }
 
 async function fetchHTML(url, insecure) {
