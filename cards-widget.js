@@ -6,7 +6,7 @@ const STATIONS = [
     name: "Genex Banzer",
     type: "genex",
     company: "Genex",
-    lat: -17.7605, lon: -63.1950,
+    lat: -17.7580, lon: -63.1783,
     url:
       "https://genex.com.bo/estaciones/" +
       "?3142_product_cat%5B0%5D=294" +
@@ -31,7 +31,7 @@ const STATIONS = [
     name: "Urubó",
     type: "gasgroup",
     company: "Orsa",
-    lat: -17.7450, lon: -63.2500,
+    lat: -17.7533, lon: -63.2213,
     url: "https://gasgroup.com.bo/api/obtener-datos-temporales/CTqmwWgj",
     product: "GASOLINA ESPECIAL",
     waze: "https://waze.com/ul?q=Orsa%20Urubo%20Santa%20Cruz%20Bolivia&navigate=yes",
@@ -40,7 +40,7 @@ const STATIONS = [
     name: "Equipetrol",
     type: "ec2",
     company: "Biopetrol",
-    lat: -17.7700, lon: -63.2050,
+    lat: -17.7542, lon: -63.1967,
     url: "http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134",
     key: "EQUIPETROL",
     waze: "https://waze.com/ul?q=Biopetrol%20Equipetrol%204to%20Anillo%20Santa%20Cruz%20Bolivia&navigate=yes",
@@ -58,7 +58,7 @@ const STATIONS = [
     name: "Alemana",
     type: "ec2",
     company: "Biopetrol",
-    lat: -17.7850, lon: -63.1750,
+    lat: -17.7718, lon: -63.1682,
     url: "http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134",
     key: "Alemana",
     waze: "https://waze.com/ul?q=Biopetrol%20Alemana%202do%20Anillo%20Santa%20Cruz%20Bolivia&navigate=yes",
@@ -76,7 +76,7 @@ const STATIONS = [
     name: "Viru Viru",
     type: "ec2",
     company: "Biopetrol",
-    lat: -17.7200, lon: -63.2400,
+    lat: -17.7200, lon: -63.1700,
     url: "http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134",
     key: "Viru Viru",
     waze: "https://waze.com/ul?q=Biopetrol%20Viru%20Viru%20Banzer%20Km%2010%20Santa%20Cruz%20Bolivia&navigate=yes",
@@ -85,7 +85,7 @@ const STATIONS = [
     name: "Gasco",
     type: "ec2",
     company: "Biopetrol",
-    lat: -17.7620, lon: -63.1970,
+    lat: -17.7580, lon: -63.1783,
     url: "http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134",
     key: "Gasco",
     waze: "https://waze.com/ul?q=Biopetrol%20Gasco%20Banzer%203er%20Anillo%20Santa%20Cruz%20Bolivia&navigate=yes",
@@ -94,7 +94,7 @@ const STATIONS = [
     name: "Rivero",
     type: "gsheets",
     company: "Rivero",
-    lat: -17.7750, lon: -63.1900,
+    lat: -17.7700, lon: -63.1900,
     url:
       "https://docs.google.com/spreadsheets/u/0/d/e/" +
       "2CAIWO3els60V5S1vVAh0cccQxdcZ1MYZhD9A1pQ-ojCNPoNh-" +
