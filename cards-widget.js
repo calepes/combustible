@@ -114,7 +114,7 @@ function normalizeLiters(raw) {
   return digits ? Number(digits) : 0;
 }
 
-// Haversine — distancia en km entre dos coordenadas
+// Haversine — distancia en línea recta (fallback)
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const toRad = (d) => (d * Math.PI) / 180;
@@ -124,6 +124,34 @@ function haversineKm(lat1, lon1, lat2, lon2) {
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// OSRM — distancia real por ruta (driving)
+// Usa la API pública de OSRM (sin API key)
+// Retorna array de distancias en km desde el origen a cada destino
+async function osrmDistances(originLat, originLon, stations) {
+  try {
+    // Formato OSRM: lon,lat (invertido)
+    const coords = [`${originLon},${originLat}`];
+    for (const s of stations) {
+      coords.push(`${s.lon},${s.lat}`);
+    }
+    const url = `https://router.project-osrm.org/table/v1/driving/${coords.join(";")}?sources=0&annotations=distance`;
+    const cleanUrl = sanitizeURL(url);
+    const r = new Request(cleanUrl);
+    r.timeoutInterval = 10;
+    const json = await r.loadJSON();
+    if (json && json.code === "Ok" && json.distances && json.distances[0]) {
+      // distances[0] = distancias desde origen a cada destino (en metros)
+      // El primer valor es origen→origen (0), los demás son las estaciones
+      return json.distances[0].slice(1).map((m) => m / 1000);
+    }
+    console.log("OSRM respuesta inesperada: " + JSON.stringify(json).substring(0, 200));
+    return null;
+  } catch (e) {
+    console.log("OSRM ERROR: " + e.message);
+    return null;
+  }
 }
 
 /***********************
@@ -323,11 +351,16 @@ const stationResults = await Promise.all(
 );
 console.log("Fetch completo.");
 
-// Calcular distancia a cada estación
-const results = stationResults.map((r) => ({
+// Calcular distancia a cada estación (OSRM por ruta, fallback Haversine)
+let routeDistances = null;
+if (userLat != null) {
+  routeDistances = await osrmDistances(userLat, userLon, stationResults);
+}
+
+const results = stationResults.map((r, i) => ({
   ...r,
   distKm: userLat != null
-    ? haversineKm(userLat, userLon, r.lat, r.lon)
+    ? (routeDistances != null ? routeDistances[i] : haversineKm(userLat, userLon, r.lat, r.lon))
     : null,
 }));
 
