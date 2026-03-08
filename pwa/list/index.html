@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Combustible</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --bg: #F2F2F7;
+      --card-bg: #FFF;
+      --text-primary: #000;
+      --text-secondary: #6D6D72;
+      --text-tertiary: #AEAEB2;
+      --system-blue: #007AFF;
+      --sep: #C6C6C8;
+      --green: #34C759;
+      --red: #FF3B30;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000;
+        --card-bg: #1C1C1E;
+        --text-primary: #FFF;
+        --text-secondary: #8E8E93;
+        --text-tertiary: #636366;
+        --system-blue: #0A84FF;
+        --sep: #38383A;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 12px 16px 8px 16px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .header-title {
+      flex: 1;
+    }
+
+    .header-title h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .header-title p {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      line-height: 1.3;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .refresh-btn {
+      background: none;
+      border: none;
+      color: var(--system-blue);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .refresh-btn:active {
+      opacity: 0.5;
+    }
+
+    .pill {
+      background: rgba(0, 122, 255, 0.12);
+      border-radius: 10px;
+      padding: 2px 7px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .pill {
+        background: rgba(10, 132, 255, 0.12);
+      }
+    }
+
+    .pill span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--system-blue);
+    }
+
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2px 10px;
+    }
+
+    /* Rows */
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      cursor: pointer;
+    }
+
+    .row:active {
+      opacity: 0.6;
+    }
+
+    .row + .row {
+      border-top: 0.5px solid var(--sep);
+      margin-left: 0;
+    }
+
+    .row-separator {
+      border-top: 0.5px solid var(--sep);
+      margin-left: 22px;
+    }
+
+    .dot {
+      font-size: 6px;
+      line-height: 1;
+      flex-shrink: 0;
+      width: 14px;
+      text-align: center;
+    }
+
+    .dot.available {
+      color: var(--green);
+    }
+
+    .dot.unavailable {
+      color: var(--red);
+    }
+
+    .station-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .station-company {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-tertiary);
+      margin-left: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .station-litros {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      margin-left: auto;
+      padding-left: 8px;
+      flex-shrink: 0;
+    }
+
+    .station-litros.available {
+      color: var(--text-primary);
+    }
+
+    .station-litros.unavailable {
+      color: var(--red);
+    }
+
+    /* Footer */
+    .footer {
+      display: flex;
+      align-items: center;
+      margin-top: 8px;
+      padding: 0 2px;
+    }
+
+    .footer-text {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px 0;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-title">
+        <h1>Combustible</h1>
+        <p>Gasolina Especial &middot; Santa Cruz</p>
+      </div>
+      <div class="header-right">
+        <button class="refresh-btn" id="refreshBtn" aria-label="Actualizar">&#x21BB;</button>
+        <div class="pill" id="pill" style="display:none;">
+          <span id="pillText"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="listCard">
+      <div class="loading" id="loading">Cargando...</div>
+    </div>
+    <div class="footer">
+      <span class="footer-text" id="footerTime"></span>
+    </div>
+  </div>
+
+  <script type="module">
+    import { STATIONS } from '../shared/stations.js';
+    import { fetchAllStations } from '../shared/fetchers.js';
+
+    const listCard = document.getElementById('listCard');
+    const loading = document.getElementById('loading');
+    const pill = document.getElementById('pill');
+    const pillText = document.getElementById('pillText');
+    const footerTime = document.getElementById('footerTime');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    async function loadData() {
+      loading.style.display = 'block';
+      listCard.querySelectorAll('.row, .row-separator').forEach(el => el.remove());
+      pill.style.display = 'none';
+      footerTime.textContent = '';
+
+      try {
+        const results = await fetchAllStations(STATIONS);
+        results.sort((a, b) => b.litros - a.litros);
+
+        loading.style.display = 'none';
+
+        const countAvail = results.filter(r => r.litros > 0).length;
+        pillText.textContent = `${countAvail}/${results.length}`;
+        pill.style.display = 'inline-flex';
+
+        for (let i = 0; i < results.length; i++) {
+          const r = results[i];
+
+          if (i > 0) {
+            const sep = document.createElement('div');
+            sep.className = 'row-separator';
+            listCard.appendChild(sep);
+          }
+
+          const row = document.createElement('div');
+          row.className = 'row';
+
+          const dot = document.createElement('span');
+          dot.className = `dot ${r.litros > 0 ? 'available' : 'unavailable'}`;
+          dot.textContent = '\u25CF';
+
+          const name = document.createElement('span');
+          name.className = 'station-name';
+          name.textContent = r.name;
+
+          const company = document.createElement('span');
+          company.className = 'station-company';
+          company.textContent = r.company;
+
+          const litros = document.createElement('span');
+          const litrosStr = r.litros > 0
+            ? `${r.litros.toLocaleString('es-BO')} L`
+            : 'Sin dato';
+          litros.className = `station-litros ${r.litros > 0 ? 'available' : 'unavailable'}`;
+          litros.textContent = litrosStr;
+
+          row.appendChild(dot);
+          row.appendChild(name);
+          row.appendChild(company);
+          row.appendChild(litros);
+
+          // Find the matching station for the waze link
+          const station = STATIONS.find(s => s.name === r.name);
+          if (station?.waze) {
+            row.addEventListener('click', () => {
+              window.open(station.waze, '_blank');
+            });
+          }
+
+          listCard.appendChild(row);
+        }
+
+        // Update footer time
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        footerTime.textContent = `Actualizado ${hh}:${mm}`;
+      } catch (err) {
+        loading.textContent = 'Error al cargar datos';
+        console.error('Error:', err);
+      }
+    }
+
+    refreshBtn.addEventListener('click', loadData);
+
+    // Initial load
+    loadData();
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => {
+        console.log('SW registro fallido:', err);
+      });
+    }
+  </script>
+</body>
+</html>
