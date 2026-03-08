@@ -291,7 +291,13 @@ const MAX_ITEMS = 8;
 const COLS = 2;
 const ROWS = Math.ceil(MAX_ITEMS / COLS);
 const WIDGET_PAD = 16;
-const CARD_GAP = 24;
+const CARD_GAP = 20;
+
+// Large widget is ~360pt wide on most iPhones
+const WIDGET_WIDTH = 360;
+const CELL_WIDTH = Math.floor(
+  (WIDGET_WIDTH - WIDGET_PAD * 2 - CARD_GAP) / COLS
+);
 
 // Top 8 stations
 const top = results.slice(0, MAX_ITEMS);
@@ -362,11 +368,11 @@ for (let row = 0; row < ROWS; row++) {
       const r = top[idx];
       const available = r.litros > 0;
 
-      // Cell
+      // Cell – fixed equal width for symmetry
       const cell = rowStack.addStack();
       cell.layoutVertically();
       cell.spacing = 2;
-      cell.size = new Size(0, 0);
+      cell.size = new Size(CELL_WIDTH, 0);
 
       // Label: STATION NAME (uppercase, accent color)
       const label = cell.addText(r.name.toUpperCase());
@@ -375,25 +381,37 @@ for (let row = 0; row < ROWS; row++) {
       label.lineLimit = 1;
       label.minimumScaleFactor = 0.8;
 
-      // Big number
+      // Number + unit on the same line
+      const numRow = cell.addStack();
+      numRow.layoutHorizontally();
+      numRow.centerAlignContent();
+      numRow.spacing = 4;
+
       const numStr = available
         ? r.litros.toLocaleString("es-BO")
         : "—";
-      const numText = cell.addText(numStr);
+      const numText = numRow.addText(numStr);
       numText.font = Font.boldRoundedSystemFont(22);
       numText.textColor = available ? textPrimary : colorRed;
       numText.lineLimit = 1;
       numText.minimumScaleFactor = 0.6;
 
-      // Subtitle: company + "litros"
-      const sub = cell.addText(
-        available ? `${r.company} · litros` : r.company
-      );
+      if (available) {
+        const unitText = numRow.addText("L");
+        unitText.font = Font.systemFont(13);
+        unitText.textColor = textSecondary;
+      }
+
+      // Company subtitle
+      const sub = cell.addText(r.company);
       sub.font = Font.systemFont(10);
       sub.textColor = textSecondary;
       sub.lineLimit = 1;
     } else {
-      rowStack.addSpacer();
+      // Empty cell to keep symmetry
+      const emptyCell = rowStack.addStack();
+      emptyCell.size = new Size(CELL_WIDTH, 0);
+      emptyCell.addSpacer();
     }
   }
 
