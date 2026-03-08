@@ -291,18 +291,6 @@ const MAX_ITEMS = 8;
 const COLS = 2;
 const ROWS = Math.ceil(MAX_ITEMS / COLS);
 const WIDGET_PAD = 16;
-const CARD_GAP = 20;
-
-// Dynamic widget width based on device screen
-const screenW = Device.screenSize().width;
-const WIDGET_WIDTH = screenW >= 430 ? 382
-  : screenW >= 393 ? 364
-  : screenW >= 390 ? 354
-  : screenW >= 375 ? 338
-  : 306;
-const CELL_WIDTH = Math.floor(
-  (WIDGET_WIDTH - WIDGET_PAD * 2 - CARD_GAP) / COLS
-);
 
 // Top 8 stations
 const top = results.slice(0, MAX_ITEMS);
@@ -361,63 +349,68 @@ badgeText.textColor = accentBlue;
 w.addSpacer(12);
 
 // ── STATS GRID (2 columns x 4 rows)
+function addCell(parent, r) {
+  const cell = parent.addStack();
+  cell.layoutVertically();
+  cell.spacing = 2;
+
+  const available = r.litros > 0;
+
+  // Label: STATION NAME
+  const label = cell.addText(r.name.toUpperCase());
+  label.font = Font.boldSystemFont(10);
+  label.textColor = accentBlue;
+  label.lineLimit = 1;
+  label.minimumScaleFactor = 0.8;
+
+  // Number + unit
+  const numRow = cell.addStack();
+  numRow.layoutHorizontally();
+  numRow.centerAlignContent();
+  numRow.spacing = 4;
+
+  const numStr = available
+    ? r.litros.toLocaleString("es-BO")
+    : "—";
+  const numText = numRow.addText(numStr);
+  numText.font = Font.boldRoundedSystemFont(22);
+  numText.textColor = available ? textPrimary : colorRed;
+  numText.lineLimit = 1;
+  numText.minimumScaleFactor = 0.6;
+
+  if (available) {
+    const unitText = numRow.addText("L");
+    unitText.font = Font.systemFont(13);
+    unitText.textColor = textSecondary;
+  }
+
+  // Company subtitle
+  const sub = cell.addText(r.company);
+  sub.font = Font.systemFont(10);
+  sub.textColor = textSecondary;
+  sub.lineLimit = 1;
+}
+
 for (let row = 0; row < ROWS; row++) {
+  const leftIdx = row * COLS;
+  const rightIdx = leftIdx + 1;
+
   const rowStack = w.addStack();
   rowStack.layoutHorizontally();
-  rowStack.spacing = CARD_GAP;
 
-  for (let col = 0; col < COLS; col++) {
-    const idx = row * COLS + col;
+  // Left cell
+  if (leftIdx < top.length) {
+    addCell(rowStack, top[leftIdx]);
+  }
 
-    if (idx < top.length) {
-      const r = top[idx];
-      const available = r.litros > 0;
+  // Flexible spacer distributes space evenly
+  rowStack.addSpacer();
 
-      // Cell – fixed equal width for symmetry
-      const cell = rowStack.addStack();
-      cell.layoutVertically();
-      cell.spacing = 2;
-      cell.size = new Size(CELL_WIDTH, 0);
-
-      // Label: STATION NAME (uppercase, accent color)
-      const label = cell.addText(r.name.toUpperCase());
-      label.font = Font.boldSystemFont(10);
-      label.textColor = accentBlue;
-      label.lineLimit = 1;
-      label.minimumScaleFactor = 0.8;
-
-      // Number + unit on the same line
-      const numRow = cell.addStack();
-      numRow.layoutHorizontally();
-      numRow.centerAlignContent();
-      numRow.spacing = 4;
-
-      const numStr = available
-        ? r.litros.toLocaleString("es-BO")
-        : "—";
-      const numText = numRow.addText(numStr);
-      numText.font = Font.boldRoundedSystemFont(22);
-      numText.textColor = available ? textPrimary : colorRed;
-      numText.lineLimit = 1;
-      numText.minimumScaleFactor = 0.6;
-
-      if (available) {
-        const unitText = numRow.addText("L");
-        unitText.font = Font.systemFont(13);
-        unitText.textColor = textSecondary;
-      }
-
-      // Company subtitle
-      const sub = cell.addText(r.company);
-      sub.font = Font.systemFont(10);
-      sub.textColor = textSecondary;
-      sub.lineLimit = 1;
-    } else {
-      // Empty cell to keep symmetry
-      const emptyCell = rowStack.addStack();
-      emptyCell.size = new Size(CELL_WIDTH, 0);
-      emptyCell.addSpacer();
-    }
+  // Right cell
+  if (rightIdx < top.length) {
+    addCell(rowStack, top[rightIdx]);
+  } else {
+    rowStack.addSpacer();
   }
 
   // Separator between rows
