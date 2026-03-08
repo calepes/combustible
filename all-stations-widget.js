@@ -413,11 +413,11 @@ footerStack.centerAlignContent();
 const hh = String(now.getHours()).padStart(2, "0");
 const mm = String(now.getMinutes()).padStart(2, "0");
 
+footerStack.addSpacer();
+
 const meta = footerStack.addText(`Actualizado ${hh}:${mm}`);
 meta.font = Font.mediumSystemFont(11);
 meta.textColor = textSecondary;
-
-footerStack.addSpacer();
 
 /***********************
  * PRESENTACIÓN
