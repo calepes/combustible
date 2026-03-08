@@ -293,8 +293,13 @@ const ROWS = Math.ceil(MAX_ITEMS / COLS);
 const WIDGET_PAD = 16;
 const CARD_GAP = 20;
 
-// Large widget is ~360pt wide on most iPhones
-const WIDGET_WIDTH = 360;
+// Dynamic widget width based on device screen
+const screenW = Device.screenSize().width;
+const WIDGET_WIDTH = screenW >= 430 ? 382
+  : screenW >= 393 ? 364
+  : screenW >= 390 ? 354
+  : screenW >= 375 ? 338
+  : 306;
 const CELL_WIDTH = Math.floor(
   (WIDGET_WIDTH - WIDGET_PAD * 2 - CARD_GAP) / COLS
 );
