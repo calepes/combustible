@@ -411,9 +411,10 @@ avail.textColor = countAvail === results.length ? colorGreen : textSecondary;
 /***********************
  * PRESENTACIÓN
  ***********************/
-if (config.runsInWidget) {
-  Script.setWidget(w);
-} else {
+// Siempre actualizar el widget (refresca al tocar)
+Script.setWidget(w);
+
+if (!config.runsInWidget) {
   // Menú interactivo: seleccionar estación → abrir en Waze
   const alert = new Alert();
   alert.title = "Navegar a estación";
