@@ -138,8 +138,11 @@ async function fetchHTML(url, insecure) {
     Accept: "text/html",
   };
   try {
-    return await r.loadString();
-  } catch (_) {
+    const html = await r.loadString();
+    console.log("fetchHTML OK: " + url.substring(0, 60) + " → " + html.length + " chars");
+    return html;
+  } catch (e) {
+    console.log("fetchHTML ERROR: " + url.substring(0, 60) + " → " + e.message);
     return "";
   }
 }
@@ -151,8 +154,11 @@ async function fetchJSON(url) {
     "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS like Mac OS X)",
   };
   try {
-    return await r.loadJSON();
-  } catch (_) {
+    const json = await r.loadJSON();
+    console.log("fetchJSON OK: " + url.substring(0, 60) + " → " + JSON.stringify(json).substring(0, 100));
+    return json;
+  } catch (e) {
+    console.log("fetchJSON ERROR: " + url.substring(0, 60) + " → " + e.message);
     return null;
   }
 }
@@ -291,15 +297,21 @@ try {
 }
 
 // Luego obtener datos de estaciones
+console.log("Iniciando fetch de estaciones...");
 const stationResults = await Promise.all(
-  STATIONS.map(async (s) => ({
-    name: s.name,
-    company: s.company,
-    lat: s.lat,
-    lon: s.lon,
-    litros: await fetchStation(s),
-  }))
+  STATIONS.map(async (s) => {
+    const litros = await fetchStation(s);
+    console.log(s.name + ": " + litros + " litros");
+    return {
+      name: s.name,
+      company: s.company,
+      lat: s.lat,
+      lon: s.lon,
+      litros: litros,
+    };
+  })
 );
+console.log("Fetch completo.");
 
 // Calcular distancia a cada estación
 const results = stationResults.map((r) => ({
