@@ -2,6 +2,24 @@
 
 Registro de cambios del Widget Combustible.
 
+## [2.1.0] - 2026-03-08 — Paleta Ocean Blue + Distancia dinámica
+
+### Cambiado
+- Paleta de colores: Ocean Blue (`#3B82F6` acento, `#60A5FA` barra de nivel)
+- Reemplaza cyan original (`#64D2FF`) y azul iOS (`#0A84FF`)
+- Dot disponible: `#30D158`, no disponible: `#FF453A`
+
+### Agregado
+- **Color de distancia dinámico**: el texto de km interpola entre verde → naranja → rojo según lejanía
+  - 0 km = verde `#34D399`
+  - ~7 km = naranja `#FB923C`
+  - 15+ km = rojo `#EF4444`
+  - Interpolación lineal en rango 0–15 km
+- Fuente bold para texto de distancia (era medium)
+
+### Nota
+- Se probó paleta Purple/Indigo (`#BF5AF2`) pero se descartó a favor de Ocean Blue
+
 ## [2.0.0] - 2026-03-08 — Cards Widget (Apple HIG)
 
 ### Agregado
