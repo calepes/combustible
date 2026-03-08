@@ -411,11 +411,14 @@ avail.textColor = countAvail === results.length ? colorGreen : textSecondary;
 /***********************
  * PRESENTACIÓN
  ***********************/
-// Siempre actualizar el widget (refresca al tocar)
 Script.setWidget(w);
 
-if (!config.runsInWidget) {
-  // Menú interactivo: seleccionar estación → abrir en Waze
+if (config.runsInWidget) {
+  // En home screen: solo actualizar datos
+} else {
+  // Al tocar: mostrar widget actualizado y luego menú Waze
+  await w.presentLarge();
+
   const alert = new Alert();
   alert.title = "Navegar a estación";
   alert.message = "Selecciona una estación para abrir en Waze";
