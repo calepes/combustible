@@ -375,14 +375,12 @@ for (let i = 0; i < results.length; i++) {
     w.addSpacer(3);
     const sepLine = w.addStack();
     sepLine.layoutHorizontally();
-    sepLine.addSpacer(20);
     const line = sepLine.addText("─".repeat(50));
     line.font = Font.systemFont(3);
     line.textColor = Color.dynamic(
       new Color("#C7C7CC"),
       new Color("#48484A")
     );
-    sepLine.addSpacer(4);
     w.addSpacer(3);
   }
 }
