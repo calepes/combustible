@@ -7,7 +7,7 @@ import { GASGROUP_MIN_LITROS } from './stations.js';
 
 /* ── Proxy ────────────────────────────── */
 
-export const PROXY_URL = 'https://combustible-proxy.YOUR_SUBDOMAIN.workers.dev';
+export const PROXY_URL = 'https://combustible-proxy.carlos-cb4.workers.dev';
 
 /**
  * Fetch a traves del proxy CORS (Cloudflare Worker)
