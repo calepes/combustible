@@ -12,12 +12,16 @@
   <style>
     :root {
       --bg: #F2F2F7;
-      --card-bg: #FFF;
-      --text-primary: #000;
-      --text-secondary: #6D6D72;
+      --card-bg: #FFFFFF;
+      --text-primary: #1C1C1E;
+      --text-secondary: #8E8E93;
       --text-tertiary: #AEAEB2;
       --system-blue: #007AFF;
+      --system-green: #34C759;
+      --system-orange: #FF9500;
+      --system-red: #FF3B30;
       --bar-bg: #E5E5EA;
+      --line-color: #D1D1D6;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -28,18 +32,18 @@
         --text-secondary: #8E8E93;
         --text-tertiary: #636366;
         --system-blue: #0A84FF;
+        --system-green: #30D158;
+        --system-orange: #FF9F0A;
+        --system-red: #FF453A;
         --bar-bg: #38383A;
+        --line-color: #38383A;
       }
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+      font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
@@ -49,7 +53,7 @@
     .container {
       max-width: 400px;
       margin: 0 auto;
-      padding: 16px;
+      padding: 16px 20px;
       padding-top: max(16px, env(safe-area-inset-top));
       padding-bottom: max(16px, env(safe-area-inset-bottom));
     }
@@ -59,37 +63,35 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
-    .header-left {
-      display: flex;
-      flex-direction: column;
-    }
+    .header-left { display: flex; flex-direction: column; }
 
     .header-title {
       font-weight: 700;
-      font-size: 16px;
+      font-size: 20px;
+      letter-spacing: -0.3px;
       color: var(--text-primary);
     }
 
     .header-subtitle {
-      font-size: 11px;
+      font-size: 13px;
       color: var(--text-secondary);
     }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .pill {
       display: inline-flex;
       align-items: center;
       background: color-mix(in srgb, var(--system-blue) 12%, transparent);
-      border-radius: 10px;
-      padding: 3px 8px;
+      border-radius: 12px;
+      padding: 4px 10px;
       font-weight: 700;
       font-size: 13px;
       color: var(--system-blue);
@@ -98,186 +100,364 @@
     .refresh-btn {
       appearance: none;
       border: none;
-      background: none;
-      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--system-blue) 10%, transparent);
       color: var(--system-blue);
-      padding: 4px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .refresh-btn svg {
-      width: 18px;
-      height: 18px;
-    }
+    .refresh-btn svg { width: 16px; height: 16px; }
 
     .refresh-btn.spinning svg {
       animation: spin 0.8s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Journey timeline */
+    .journey { position: relative; }
+
+    .journey::before {
+      content: '';
+      position: absolute;
+      left: 9px;
+      top: 0;
+      bottom: 20px;
+      width: 2.5px;
+      background: linear-gradient(to bottom, var(--system-blue), color-mix(in srgb, var(--system-blue) 40%, transparent));
+      border-radius: 2px;
     }
 
-    /* Grid */
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    /* Card */
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 10px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: opacity 0.15s;
-    }
-
-    .card:active {
-      opacity: 0.7;
-    }
-
-    .card-top {
+    /* Origin node */
+    .origin {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 4px;
+      gap: 12px;
+      padding: 8px 0 20px;
+      position: relative;
+    }
+
+    .origin-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--system-blue);
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--system-blue) 15%, transparent);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .origin-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--system-blue);
+    }
+
+    /* Distance separator */
+    .distance-sep {
+      display: flex;
+      align-items: center;
+      padding: 6px 0 6px 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .distance-badge {
+      background: var(--bg);
+      border: 1.5px solid var(--line-color);
+      border-radius: 10px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* Station node */
+    .station-node {
+      display: flex;
+      gap: 12px;
+      padding: 0 0 16px;
+      position: relative;
+    }
+
+    .node-icon-col {
+      flex-shrink: 0;
+      width: 20px;
+      display: flex;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .node-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      margin-top: 32px;
+    }
+
+    .node-dot.green {
+      background: var(--system-green);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--system-green) 20%, transparent);
+    }
+    .node-dot.orange {
+      background: var(--system-orange);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--system-orange) 20%, transparent);
+    }
+    .node-dot.red {
+      background: var(--system-red);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--system-red) 20%, transparent);
+    }
+    .node-dot.gray {
+      background: var(--text-tertiary);
+    }
+
+    /* Station card */
+    .station-card {
+      flex: 1;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 14px 16px;
+      cursor: pointer;
+      box-shadow: 0 0.5px 1px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .station-card:active {
+      transform: scale(0.98);
+      box-shadow: 0 0.5px 1px rgba(0,0,0,0.04);
+    }
+
+    .station-card.dimmed { opacity: 0.55; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    /* 3D Isometric Pump Icon */
+    .pump-3d {
+      width: 56px;
+      height: 64px;
+      flex-shrink: 0;
+      position: relative;
+      transform: perspective(200px) rotateY(-8deg) rotateX(2deg);
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12)) drop-shadow(0 2px 3px rgba(0,0,0,0.08));
+    }
+
+    .pump-3d .body {
+      position: absolute;
+      width: 34px; height: 44px;
+      bottom: 8px; left: 6px;
+      border-radius: 6px 6px 3px 3px;
+      overflow: hidden;
+    }
+    .pump-3d .body::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(105deg, rgba(255,255,255,0.35) 0%, transparent 50%, rgba(0,0,0,0.08) 100%);
+      border-radius: inherit;
+    }
+
+    .pump-3d.green .body { background: linear-gradient(170deg, #6EE7A0 0%, #34D058 25%, #22C55E 60%, #16A34A 100%); }
+    .pump-3d.orange .body { background: linear-gradient(170deg, #FDE68A 0%, #FBBF24 25%, #F59E0B 60%, #D97706 100%); }
+    .pump-3d.red .body { background: linear-gradient(170deg, #FCA5A5 0%, #F87171 25%, #EF4444 60%, #DC2626 100%); }
+    .pump-3d.gray .body { background: linear-gradient(170deg, #E5E7EB 0%, #D1D5DB 25%, #9CA3AF 60%, #6B7280 100%); }
+
+    .pump-3d .screen {
+      position: absolute;
+      width: 20px; height: 12px;
+      top: 18px; left: 13px;
+      border-radius: 2.5px;
+      background: linear-gradient(180deg, #FAFAFA 0%, #E8E8E8 100%);
+      box-shadow: inset 0 0.5px 1px rgba(0,0,0,0.08), 0 0.5px 0 rgba(255,255,255,0.4);
+    }
+    .pump-3d .screen::after {
+      content: '';
+      position: absolute;
+      width: 14px; height: 2px;
+      top: 4px; left: 3px;
+      background: rgba(0,0,0,0.12);
+      border-radius: 1px;
+    }
+
+    .pump-3d .nozzle-arm {
+      position: absolute;
+      width: 6px; height: 20px;
+      top: 14px; right: 4px;
+      border-radius: 3px;
+    }
+    .pump-3d.green .nozzle-arm { background: linear-gradient(180deg, #15803D, #14532D); }
+    .pump-3d.orange .nozzle-arm { background: linear-gradient(180deg, #B45309, #78350F); }
+    .pump-3d.red .nozzle-arm { background: linear-gradient(180deg, #B91C1C, #7F1D1D); }
+    .pump-3d.gray .nozzle-arm { background: linear-gradient(180deg, #6B7280, #374151); }
+
+    .pump-3d .hose {
+      position: absolute;
+      width: 14px; height: 14px;
+      top: 8px; right: 0;
+      border: 3px solid transparent;
+      border-right-color: #44403C;
+      border-top-color: #44403C;
+      border-radius: 0 10px 0 0;
+    }
+
+    .pump-3d .nozzle-tip {
+      position: absolute;
+      width: 10px; height: 5px;
+      top: 6px; right: 10px;
+      border-radius: 2px 2px 0 0;
+      background: linear-gradient(90deg, #57534E, #44403C);
+      transform: rotate(-30deg);
+    }
+
+    .pump-3d .base {
+      position: absolute;
+      width: 44px; height: 8px;
+      bottom: 0; left: 2px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, #F5F5F4 0%, #D6D3D1 50%, #A8A29E 100%);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+
+    .pump-3d .cap {
+      position: absolute;
+      width: 30px; height: 5px;
+      top: 9px; left: 8px;
+      border-radius: 3px 3px 0 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.1));
+    }
+
+    .pump-3d .shine {
+      position: absolute;
+      width: 6px; height: 18px;
+      top: 20px; left: 10px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.5), transparent);
+      transform: rotate(2deg);
+    }
+
+    /* Card info */
+    .card-info { flex: 1; min-width: 0; }
+
+    .card-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
     }
 
     .card-name {
-      font-weight: 600;
-      font-size: 13px;
+      font-size: 16px;
+      font-weight: 650;
+      letter-spacing: -0.2px;
       color: var(--text-primary);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      flex: 1;
-      min-width: 0;
     }
 
-    .status-chip {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 4px;
-      padding: 2px 6px;
-      font-weight: 500;
-      font-size: 9px;
-      line-height: 1;
-      white-space: nowrap;
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
       flex-shrink: 0;
     }
+    .status-dot.green { background: var(--system-green); }
+    .status-dot.orange { background: var(--system-orange); }
+    .status-dot.red { background: var(--system-red); }
+    .status-dot.gray { background: var(--text-tertiary); }
 
-    .status-chip.available {
-      background: rgba(52, 199, 89, 0.12);
-      color: #34C759;
+    .card-company {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
     }
 
-    .status-chip.unavailable {
-      background: rgba(255, 59, 48, 0.12);
-      color: #FF3B30;
-    }
-
-    /* Litros */
-    .card-litros {
+    .litros-row {
       display: flex;
       align-items: baseline;
-      gap: 2px;
-      margin-top: 4px;
+      gap: 4px;
+      margin-bottom: 8px;
     }
 
     .litros-number {
+      font-size: 26px;
       font-weight: 700;
-      font-size: 18px;
+      letter-spacing: -0.8px;
+      font-variant-numeric: tabular-nums;
       color: var(--text-primary);
     }
 
     .litros-number.empty {
-      color: var(--text-secondary);
+      color: var(--text-tertiary);
+      font-size: 20px;
     }
 
     .litros-unit {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-secondary);
+      font-weight: 500;
     }
 
-    /* Stock bar */
-    .stock-row {
+    .stock-bar {
       display: flex;
       align-items: center;
-      gap: 4px;
-      margin-top: 4px;
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
     .bar-track {
       flex: 1;
-      height: 6px;
+      height: 5px;
       border-radius: 3px;
-      background: var(--bar-bg);
+      background: color-mix(in srgb, var(--text-tertiary) 20%, transparent);
       overflow: hidden;
     }
 
     .bar-fill {
       height: 100%;
       border-radius: 3px;
-      min-width: 0;
-      transition: width 0.3s ease;
+      transition: width 0.4s ease;
     }
 
-    .bar-fill.green { background: #34C759; }
-    .bar-fill.orange { background: #FF9500; }
-    .bar-fill.red { background: #FF3B30; }
+    .bar-fill.green { background: linear-gradient(90deg, #86EFAC, #22C55E); }
+    .bar-fill.orange { background: linear-gradient(90deg, #FDE68A, #F59E0B); }
+    .bar-fill.red { background: linear-gradient(90deg, #FECACA, #EF4444); }
 
-    .stock-pct {
-      font-size: 9px;
-      color: var(--text-secondary);
-      white-space: nowrap;
-    }
-
-    /* Card footer */
-    .card-footer {
-      display: flex;
-      align-items: center;
-      margin-top: 4px;
-      gap: 2px;
-    }
-
-    .pin-icon {
-      width: 9px;
-      height: 9px;
-      flex-shrink: 0;
-    }
-
-    .card-distance {
-      font-weight: 500;
+    .bar-pct {
       font-size: 11px;
-      color: var(--system-blue);
-      margin-right: 4px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      min-width: 28px;
+      text-align: right;
     }
 
-    .card-company {
-      font-size: 10px;
-      color: var(--text-tertiary);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .card-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--system-blue);
+      font-size: 13px;
+      font-weight: 600;
+      background: color-mix(in srgb, var(--system-blue) 8%, transparent);
+      padding: 6px 12px;
+      border-radius: 10px;
     }
+
+    .card-cta svg { width: 13px; height: 13px; }
 
     /* Footer */
-    .footer {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      margin-top: 10px;
-    }
-
-    .footer-text {
-      font-weight: 500;
-      font-size: 11px;
-      color: var(--text-secondary);
+    .update-footer {
+      text-align: center;
+      padding: 8px 0;
+      font-size: 12px;
+      color: var(--text-tertiary);
     }
 
     /* Loading */
@@ -311,7 +491,7 @@
       <div class="header-right">
         <span class="pill" id="pill" style="display:none"></span>
         <button class="refresh-btn" id="refreshBtn" title="Actualizar">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"></polyline>
             <polyline points="1 20 1 14 7 14"></polyline>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
@@ -327,8 +507,8 @@
       </div>
     </div>
 
-    <div class="footer" id="footer" style="display:none">
-      <span class="footer-text" id="footerText"></span>
+    <div class="update-footer" id="footer" style="display:none">
+      <span id="footerText"></span>
     </div>
   </div>
 
@@ -352,7 +532,9 @@
       return n.toLocaleString('es-BO');
     }
 
-    function getStockColorClass(pct) {
+    function getColorClass(litros, maxLitros) {
+      if (litros === 0) return 'gray';
+      const pct = litros / maxLitros;
       if (pct >= 0.5) return 'green';
       if (pct >= 0.2) return 'orange';
       return 'red';
@@ -377,109 +559,145 @@
       });
     }
 
-    function renderCards(stations, maxLitros) {
-      const grid = document.createElement('div');
-      grid.className = 'grid';
+    function createPumpIcon(colorClass) {
+      const pump = document.createElement('div');
+      pump.className = `pump-3d ${colorClass}`;
+      pump.innerHTML =
+        '<div class="base"></div>' +
+        '<div class="body"></div>' +
+        '<div class="screen"></div>' +
+        '<div class="cap"></div>' +
+        '<div class="shine"></div>' +
+        '<div class="nozzle-arm"></div>' +
+        '<div class="hose"></div>' +
+        '<div class="nozzle-tip"></div>';
+      return pump;
+    }
+
+    function renderJourney(stations, maxLitros) {
+      const journey = document.createElement('div');
+      journey.className = 'journey';
+
+      // Origin node
+      const origin = document.createElement('div');
+      origin.className = 'origin';
+      origin.innerHTML =
+        '<div class="origin-dot"></div>' +
+        '<span class="origin-label">Tu ubicación</span>';
+      journey.appendChild(origin);
 
       for (const r of stations) {
         const available = r.litros > 0;
         const pct = available ? r.litros / maxLitros : 0;
         const pctRound = Math.round(pct * 100);
-        const colorClass = getStockColorClass(pct);
+        const colorClass = getColorClass(r.litros, maxLitros);
 
+        // Distance separator
+        if (r.distKm != null) {
+          const sep = document.createElement('div');
+          sep.className = 'distance-sep';
+          const badge = document.createElement('span');
+          badge.className = 'distance-badge';
+          badge.textContent = formatDistance(r.distKm);
+          sep.appendChild(badge);
+          journey.appendChild(sep);
+        }
+
+        // Station node
+        const node = document.createElement('div');
+        node.className = 'station-node';
+
+        // Left: dot on the line
+        const iconCol = document.createElement('div');
+        iconCol.className = 'node-icon-col';
+        const dot = document.createElement('div');
+        dot.className = `node-dot ${colorClass}`;
+        iconCol.appendChild(dot);
+        node.appendChild(iconCol);
+
+        // Right: card
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = `station-card${available ? '' : ' dimmed'}`;
         if (r.waze) {
           card.addEventListener('click', () => window.open(r.waze, '_blank'));
         }
 
-        // Top row
-        const topRow = document.createElement('div');
-        topRow.className = 'card-top';
+        const header = document.createElement('div');
+        header.className = 'card-header';
 
+        // 3D pump icon
+        header.appendChild(createPumpIcon(colorClass));
+
+        // Info
+        const info = document.createElement('div');
+        info.className = 'card-info';
+
+        // Name row
+        const nameRow = document.createElement('div');
+        nameRow.className = 'card-name-row';
         const name = document.createElement('span');
         name.className = 'card-name';
         name.textContent = r.name;
+        const statusDot = document.createElement('div');
+        statusDot.className = `status-dot ${colorClass}`;
+        nameRow.appendChild(name);
+        nameRow.appendChild(statusDot);
+        info.appendChild(nameRow);
 
-        const chip = document.createElement('span');
-        chip.className = `status-chip ${available ? 'available' : 'unavailable'}`;
-        chip.textContent = available ? 'Disponible' : 'Sin dato';
-
-        topRow.appendChild(name);
-        topRow.appendChild(chip);
-        card.appendChild(topRow);
+        // Company
+        const company = document.createElement('span');
+        company.className = 'card-company';
+        company.textContent = r.company;
+        info.appendChild(company);
 
         // Litros
         const litrosRow = document.createElement('div');
-        litrosRow.className = 'card-litros';
-
+        litrosRow.className = 'litros-row';
         const numEl = document.createElement('span');
         numEl.className = `litros-number${available ? '' : ' empty'}`;
         numEl.textContent = available ? formatNumber(r.litros) : '\u2014';
         litrosRow.appendChild(numEl);
-
         if (available) {
           const unitEl = document.createElement('span');
           unitEl.className = 'litros-unit';
-          unitEl.textContent = 'L';
+          unitEl.textContent = 'litros';
           litrosRow.appendChild(unitEl);
         }
-
-        card.appendChild(litrosRow);
+        info.appendChild(litrosRow);
 
         // Stock bar
-        const stockRow = document.createElement('div');
-        stockRow.className = 'stock-row';
-
+        const stockBar = document.createElement('div');
+        stockBar.className = 'stock-bar';
         const barTrack = document.createElement('div');
         barTrack.className = 'bar-track';
-
         if (pct > 0) {
           const barFill = document.createElement('div');
           barFill.className = `bar-fill ${colorClass}`;
           barFill.style.width = `${Math.max(pct * 100, 5)}%`;
           barTrack.appendChild(barFill);
         }
-
-        stockRow.appendChild(barTrack);
-
+        stockBar.appendChild(barTrack);
         const pctText = document.createElement('span');
-        pctText.className = 'stock-pct';
+        pctText.className = 'bar-pct';
         pctText.textContent = `${pctRound}%`;
-        stockRow.appendChild(pctText);
+        stockBar.appendChild(pctText);
+        info.appendChild(stockBar);
 
-        card.appendChild(stockRow);
+        // CTA
+        const cta = document.createElement('div');
+        cta.className = 'card-cta';
+        cta.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>' +
+          'Navegar';
+        info.appendChild(cta);
 
-        // Footer
-        const footerRow = document.createElement('div');
-        footerRow.className = 'card-footer';
-
-        if (r.distKm != null) {
-          const pinSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-          pinSvg.setAttribute('class', 'pin-icon');
-          pinSvg.setAttribute('viewBox', '0 0 24 24');
-          pinSvg.setAttribute('fill', 'var(--system-blue)');
-          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          path.setAttribute('d', 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z');
-          pinSvg.appendChild(path);
-          footerRow.appendChild(pinSvg);
-
-          const distEl = document.createElement('span');
-          distEl.className = 'card-distance';
-          distEl.textContent = formatDistance(r.distKm);
-          footerRow.appendChild(distEl);
-        }
-
-        const companyEl = document.createElement('span');
-        companyEl.className = 'card-company';
-        companyEl.textContent = r.company;
-        footerRow.appendChild(companyEl);
-
-        card.appendChild(footerRow);
-        grid.appendChild(card);
+        header.appendChild(info);
+        card.appendChild(header);
+        node.appendChild(card);
+        journey.appendChild(node);
       }
 
-      return grid;
+      return journey;
     }
 
     async function loadData() {
@@ -524,10 +742,10 @@
         pillEl.textContent = `${countAvail}/${top.length}`;
         pillEl.style.display = '';
 
-        // Render grid
-        const grid = renderCards(top, maxLitros);
+        // Render journey
+        const journey = renderJourney(top, maxLitros);
         contentEl.innerHTML = '';
-        contentEl.appendChild(grid);
+        contentEl.appendChild(journey);
 
         // Update footer
         const now = new Date();
