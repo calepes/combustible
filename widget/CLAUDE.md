@@ -2,9 +2,19 @@
 
 ## Resumen
 
-Repo monorepo `calepes/combustible` con dos subproyectos:
+Repo monorepo `calepes/combustible` con tres subproyectos:
 - `widget/` — Widget de Scriptable (iOS) que muestra disponibilidad de Gasolina Especial en Santa Cruz, Bolivia
-- `pwa/` — Progressive Web App (en desarrollo)
+- `pwa/` — Progressive Web Apps (cards y list views)
+- `proxy/` — Cloudflare Worker CORS proxy para APIs de estaciones
+
+### PWA Cards (`pwa/cards/`)
+- **Vista journey:** timeline vertical ordenado por cercanía
+- **Icono 3D:** imagen de thiings.co coloreada por stock (hue-rotate)
+- **29 estaciones:** 11 Genex, 16 Biopetrol, 1 Gasgroup (Orsa), 1 Rivero
+- **Módulos compartidos:** `pwa/shared/stations.js` (config), `pwa/shared/fetchers.js` (fetch/parse)
+- **Deploy:** GitHub Pages via rama main del repo combustible → `apps.lepesqueur.net/combustible/pwa/cards/`
+- **SW cache:** bump `CACHE_NAME` en `sw.js` con cada cambio (actual: v8)
+- **Pendientes:** ver `docs/PENDIENTES.md`
 
 Todo el código del widget es JavaScript ejecutado en el runtime de Scriptable.
 
