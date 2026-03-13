@@ -251,7 +251,16 @@
       object-fit: contain;
     }
 
-    .pump-icon.dimmed {
+    .pump-icon.green {
+      filter: hue-rotate(90deg) saturate(1.4) brightness(1.05);
+    }
+    .pump-icon.orange {
+      filter: hue-rotate(30deg) saturate(1.6) brightness(1.05);
+    }
+    .pump-icon.red {
+      filter: hue-rotate(-10deg) saturate(1.8) brightness(0.95);
+    }
+    .pump-icon.gray {
       filter: grayscale(1) opacity(0.5);
     }
 
@@ -485,7 +494,7 @@
 
     function createPumpIcon(colorClass) {
       const img = document.createElement('img');
-      img.className = `pump-icon${colorClass === 'gray' ? ' dimmed' : ''}`;
+      img.className = `pump-icon ${colorClass}`;
       img.src = PUMP_ICON_URL;
       img.alt = 'Surtidor';
       img.loading = 'lazy';
@@ -504,21 +513,25 @@
         '<span class="origin-label">Tu ubicación</span>';
       journey.appendChild(origin);
 
+      let prevDistKm = 0; // track previous station distance for incremental badge
+
       for (const r of stations) {
         const available = r.litros > 0;
         const pct = available ? r.litros / maxLitros : 0;
         const pctRound = Math.round(pct * 100);
         const colorClass = getColorClass(r.litros, maxLitros);
 
-        // Distance separator
+        // Distance separator (incremental: distance between stations)
         if (r.distKm != null) {
+          const delta = r.distKm - prevDistKm;
           const sep = document.createElement('div');
           sep.className = 'distance-sep';
           const badge = document.createElement('span');
           badge.className = 'distance-badge';
-          badge.textContent = formatDistance(r.distKm);
+          badge.textContent = `+ ${formatDistance(delta)}`;
           sep.appendChild(badge);
           journey.appendChild(sep);
+          prevDistKm = r.distKm;
         }
 
         // Station node
