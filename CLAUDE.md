@@ -46,6 +46,12 @@ cd proxy && npx wrangler deploy
 ```
 URL: `https://combustible-proxy.carlos-cb4.workers.dev`
 
+Requiere KV namespace `CAPACIDAD` (ID en `wrangler.toml`). Para crear:
+```bash
+npx wrangler kv namespace create CAPACIDAD
+# Copiar el ID al wrangler.toml
+```
+
 ### Widgets (Scriptable)
 Push a la rama correspondiente → el loader en Scriptable descarga automáticamente:
 
@@ -64,7 +70,7 @@ pwa/
 ├── map/index.html      ← Vista mapa (Google Maps, markers con litros)
 └── shared/
     ├── stations.js     ← Config de 27 estaciones (coords, URLs, keys)
-    ├── fetchers.js     ← Fetch via proxy, parsers por tipo, distancias Google/OSRM
+    ├── fetchers.js     ← Fetch via proxy, parsers por tipo, capacidad (KV), distancias
     └── icons/          ← PNG icons (bomba 3D de thiings.co)
 ```
 
@@ -72,8 +78,10 @@ pwa/
 1. `getUserLocation()` + `fetchAllStations()` en paralelo
 2. Cada estación se parsea según su `type`: genex (HTML), ec2 (HTML), gasgroup (JSON), gsheets (chartJson)
 3. Todas las requests van via el CORS proxy (`combustible-proxy.carlos-cb4.workers.dev`)
-4. Distancias: Google Distance Matrix API → OSRM fallback → Haversine fallback
-5. Ordenar por distancia, renderizar (journey timeline o mapa)
+4. Litros observados se reportan a `POST /capacidad` del proxy → Cloudflare KV guarda el máximo histórico
+5. El % real de cada estación se calcula como `litros / capacidad` (máximo histórico observado)
+6. Distancias: Google Distance Matrix API → OSRM fallback → Haversine fallback
+7. Ordenar por distancia, renderizar (journey timeline o mapa)
 
 ### Tipos de estación y parsers
 
@@ -91,12 +99,14 @@ pwa/
 | Google Maps JS API | Mapa en `pwa/map/` | Sí (restringida por dominio) |
 | Google Distance Matrix | Distancias reales de manejo | Sí (misma key) |
 | OSRM Demo | Fallback distancias | No |
-| CORS Proxy (Cloudflare) | Proxy para scraping | No |
+| CORS Proxy (Cloudflare) | Proxy para scraping + capacidad KV | No |
 
-### Proxy CORS
+### Proxy CORS + Capacidad (KV)
 - Whitelist: genex.com.bo, gasgroup.com.bo, compute.amazonaws.com, docs.google.com, router.project-osrm.org
 - Cache: 60s (`Cache-Control: public, max-age=60`)
-- Uso: `proxy/?url=<encoded_url>`
+- Uso proxy: `GET /?url=<encoded_url>`
+- Uso capacidad: `GET /capacidad` (leer mapa) · `POST /capacidad` (reportar litros, actualiza max en KV)
+- Cloudflare KV namespace `CAPACIDAD` almacena el máximo histórico por estación (universal, server-side)
 
 ## Convenciones
 

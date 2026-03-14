@@ -23,6 +23,7 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 | M2 | Validar colores de icono 3D en móvil | media | pendiente | hue-rotate verde/naranja/rojo/gris — verificar que se ven bien en cel |
 | M3 | Limpiar deploy duplicado | baja | pendiente | Eliminar copia vieja en `calepes.github.io/combustible/pwa/` |
 | M4 | ~~SW: network-first para index.html~~ | baja | hecho | Implementado en cards (v12), list (v3), map (v7). 2026-03-14 |
+| M5 | ~~Capacidad estimada por estación (% real)~~ | alta | hecho | Cloudflare KV trackea max histórico. PWA reporta litros → proxy actualiza KV → % real = litros/capacidad. 2026-03-14 |
 
 ## Ideas
 
@@ -53,3 +54,4 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 | 2026-03-14 | — | CLAUDE.md actualizado con arquitectura completa (map view, Distance Matrix, SW versions) |
 | 2026-03-14 | — | PENDIENTES.md eliminado — supersedido por BACKLOG.md |
 | 2026-03-14 | — | Estación Orsa Alemana agregada (gasgroup 39gbIJkJ). Total: 30 estaciones. SW cache bump: cards v12, map v7, list v3 |
+| 2026-03-14 | M5 | Capacidad estimada por estación via Cloudflare KV. % real en cards, map y list. Tests para worker (17 nuevos) |

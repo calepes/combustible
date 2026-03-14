@@ -13,7 +13,7 @@ Contexto general del repo en `../CLAUDE.md`.
 ## Shared
 
 - `shared/stations.js` — Config de 27 estaciones (coords, URLs, keys, tipo)
-- `shared/fetchers.js` — Fetch via proxy, parsers por tipo, distancias (Google → OSRM → Haversine)
+- `shared/fetchers.js` — Fetch via proxy, parsers por tipo, capacidad (KV), distancias (Google → OSRM → Haversine)
 - `shared/icons/` — PNG icons bomba 3D (192, 512, apple-touch-icon)
 
 ## Desarrollo local
@@ -22,6 +22,13 @@ Contexto general del repo en `../CLAUDE.md`.
 python3 -m http.server 8000
 # http://localhost:8000/cards/ o /map/ o /list/
 ```
+
+## Capacidad estimada
+
+Las vistas muestran el **% real** de cada estación (`litros / capacidad`). La capacidad se estima automáticamente:
+- `fetchAllStations()` reporta litros observados a `POST /capacidad` del proxy
+- Cloudflare KV guarda el máximo histórico por estación (universal, server-side)
+- Si no hay capacidad aún, fallback a `maxLitros` (máximo entre estaciones visibles)
 
 ## Gotchas
 
