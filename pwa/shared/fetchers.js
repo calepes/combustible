@@ -222,6 +222,42 @@ export async function osrmDistances(originLat, originLon, stations) {
   }
 }
 
+/* ── Capacidad estimada (max historico) ── */
+
+const CAPACITY_STORAGE_KEY = 'combustible_capacidad_max';
+
+/**
+ * Lee el mapa de capacidades estimadas desde localStorage.
+ * @returns {Object<string, number>}
+ */
+function loadCapacityMap() {
+  try {
+    return JSON.parse(localStorage.getItem(CAPACITY_STORAGE_KEY)) || {};
+  } catch (_) {
+    return {};
+  }
+}
+
+/**
+ * Actualiza la capacidad estimada de una estacion si el valor actual es mayor.
+ * @param {string} name — nombre de la estacion
+ * @param {number} litros — litros observados
+ * @returns {number} capacidad estimada (max historico)
+ */
+function updateCapacity(name, litros) {
+  if (litros <= 0) {
+    const map = loadCapacityMap();
+    return map[name] || 0;
+  }
+  const map = loadCapacityMap();
+  const prev = map[name] || 0;
+  if (litros > prev) {
+    map[name] = litros;
+    try { localStorage.setItem(CAPACITY_STORAGE_KEY, JSON.stringify(map)); } catch (_) {}
+  }
+  return Math.max(litros, prev);
+}
+
 /* ── Fetch de estaciones ──────────────── */
 
 /**
@@ -264,19 +300,22 @@ async function fetchStation(s) {
 
 /**
  * Obtiene datos de todas las estaciones en paralelo.
+ * Incluye capacidad estimada (max historico observado, via localStorage).
  * @param {Array} stations — array de objetos estacion (de stations.js)
- * @returns {Promise<Array<{name, company, lat, lon, litros}>>}
+ * @returns {Promise<Array<{name, company, lat, lon, litros, capacidad}>>}
  */
 export async function fetchAllStations(stations) {
   return Promise.all(
     stations.map(async (s) => {
       const litros = await fetchStation(s);
+      const capacidad = updateCapacity(s.name, litros);
       return {
         name: s.name,
         company: s.company,
         lat: s.lat,
         lon: s.lon,
         litros,
+        capacidad,
       };
     })
   );

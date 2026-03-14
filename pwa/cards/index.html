@@ -464,9 +464,9 @@
       return n.toLocaleString('es-BO');
     }
 
-    function getColorClass(litros, maxLitros) {
+    function getColorClass(litros, capacidad) {
       if (litros === 0) return 'gray';
-      const pct = litros / maxLitros;
+      const pct = capacidad > 0 ? litros / capacidad : 0;
       if (pct >= 0.5) return 'green';
       if (pct >= 0.2) return 'orange';
       return 'red';
@@ -502,7 +502,7 @@
       return img;
     }
 
-    function renderJourney(stations, maxLitros) {
+    function renderJourney(stations) {
       const journey = document.createElement('div');
       journey.className = 'journey';
 
@@ -518,9 +518,10 @@
 
       for (const r of stations) {
         const available = r.litros > 0;
-        const pct = available ? r.litros / maxLitros : 0;
+        const cap = r.capacidad || 1;
+        const pct = available ? r.litros / cap : 0;
         const pctRound = Math.round(pct * 100);
-        const colorClass = getColorClass(r.litros, maxLitros);
+        const colorClass = getColorClass(r.litros, cap);
 
         // Distance separator (incremental: distance between stations)
         if (r.distKm != null) {
@@ -679,7 +680,6 @@
         results.sort((a, b) => a.distKm - b.distKm);
 
         const top = results.slice(0, MAX_ITEMS);
-        const maxLitros = Math.max(...top.map((r) => r.litros), 1);
 
         // Update pill
         const countAvail = top.filter((r) => r.litros > 0).length;
@@ -687,7 +687,7 @@
         pillEl.style.display = '';
 
         // Render journey
-        const journey = renderJourney(top, maxLitros);
+        const journey = renderJourney(top);
         contentEl.innerHTML = '';
         contentEl.appendChild(journey);
 

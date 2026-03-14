@@ -300,8 +300,10 @@
           company.textContent = r.company;
 
           const litros = document.createElement('span');
+          const cap = r.capacidad || 0;
+          const pctReal = r.litros > 0 && cap > 0 ? Math.round(r.litros / cap * 100) : 0;
           const litrosStr = r.litros > 0
-            ? `${r.litros.toLocaleString('es-BO')} L`
+            ? `${r.litros.toLocaleString('es-BO')} L` + (cap > 0 ? ` (${pctReal}%)` : '')
             : 'Sin dato';
           litros.className = `station-litros ${r.litros > 0 ? 'available' : 'unavailable'}`;
           litros.textContent = litrosStr;
