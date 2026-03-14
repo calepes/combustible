@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Combustible Mapa</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="../shared/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="../shared/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #F2F2F7;
+      --card-bg: #FFFFFF;
+      --text-primary: #1C1C1E;
+      --text-secondary: #8E8E93;
+      --text-tertiary: #AEAEB2;
+      --system-blue: #007AFF;
+      --system-green: #34C759;
+      --system-orange: #FF9500;
+      --system-red: #FF3B30;
+      --bar-bg: #E5E5EA;
+      --overlay-bg: rgba(255,255,255,0.85);
+      --tile-filter: none;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000;
+        --card-bg: #1C1C1E;
+        --text-primary: #FFF;
+        --text-secondary: #8E8E93;
+        --text-tertiary: #636366;
+        --system-blue: #0A84FF;
+        --system-green: #30D158;
+        --system-orange: #FF9F0A;
+        --system-red: #FF453A;
+        --bar-bg: #38383A;
+        --overlay-bg: rgba(28,28,30,0.85);
+        --tile-filter: brightness(0.7) contrast(1.1);
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #map {
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    /* Dark mode tiles */
+    @media (prefers-color-scheme: dark) {
+      .leaflet-tile-pane { filter: var(--tile-filter); }
+    }
+
+    /* Header overlay */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      padding-top: max(12px, env(safe-area-inset-top));
+      background: var(--overlay-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .header-left { display: flex; flex-direction: column; }
+
+    .header-title {
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      background: color-mix(in srgb, var(--system-blue) 12%, transparent);
+      border-radius: 12px;
+      padding: 4px 10px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--system-blue);
+    }
+
+    .refresh-btn {
+      appearance: none;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--system-blue) 10%, transparent);
+      color: var(--system-blue);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .refresh-btn svg { width: 16px; height: 16px; }
+
+    .refresh-btn.spinning svg {
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Locate button */
+    .locate-btn {
+      position: fixed;
+      bottom: max(24px, env(safe-area-inset-bottom));
+      left: 16px;
+      z-index: 1000;
+      appearance: none;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--card-bg);
+      color: var(--system-blue);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .locate-btn svg { width: 20px; height: 20px; }
+
+    /* Custom markers */
+    .marker-pin {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 12px;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .marker-pin::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+    }
+
+    .marker-pin.green { background: var(--system-green); }
+    .marker-pin.green::after { border-top: 6px solid var(--system-green); }
+    .marker-pin.orange { background: var(--system-orange); }
+    .marker-pin.orange::after { border-top: 6px solid var(--system-orange); }
+    .marker-pin.red { background: var(--system-red); }
+    .marker-pin.red::after { border-top: 6px solid var(--system-red); }
+    .marker-pin.gray { background: var(--text-tertiary); }
+    .marker-pin.gray::after { border-top: 6px solid var(--text-tertiary); }
+
+    /* User location dot */
+    .user-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--system-blue);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 6px rgba(0,122,255,0.2), 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 6px rgba(0,122,255,0.2), 0 2px 8px rgba(0,0,0,0.3); }
+      50% { box-shadow: 0 0 0 12px rgba(0,122,255,0.1), 0 2px 8px rgba(0,0,0,0.3); }
+    }
+
+    .user-dot { animation: pulse 2s ease-in-out infinite; }
+
+    /* Leaflet popup custom */
+    .leaflet-popup-content-wrapper {
+      border-radius: 16px !important;
+      padding: 0 !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+      background: var(--card-bg) !important;
+    }
+
+    .leaflet-popup-content {
+      margin: 0 !important;
+      width: 260px !important;
+      font-family: -apple-system, system-ui, sans-serif !important;
+    }
+
+    .leaflet-popup-tip {
+      background: var(--card-bg) !important;
+    }
+
+    .leaflet-popup-close-button {
+      color: var(--text-tertiary) !important;
+      font-size: 20px !important;
+      top: 8px !important;
+      right: 10px !important;
+    }
+
+    /* Popup content */
+    .popup-content { padding: 14px 16px; }
+
+    .popup-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .popup-name {
+      font-size: 15px;
+      font-weight: 650;
+      letter-spacing: -0.2px;
+      color: var(--text-primary);
+    }
+
+    .popup-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .popup-dot.green { background: var(--system-green); }
+    .popup-dot.orange { background: var(--system-orange); }
+    .popup-dot.red { background: var(--system-red); }
+    .popup-dot.gray { background: var(--text-tertiary); }
+
+    .popup-company {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .popup-litros-row {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .popup-litros {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+
+    .popup-litros.empty {
+      color: var(--text-tertiary);
+      font-size: 18px;
+    }
+
+    .popup-unit {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .popup-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .popup-bar-track {
+      flex: 1;
+      height: 4px;
+      border-radius: 3px;
+      background: color-mix(in srgb, var(--text-tertiary) 20%, transparent);
+      overflow: hidden;
+    }
+
+    .popup-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .popup-bar-fill.green { background: linear-gradient(90deg, #86EFAC, #22C55E); }
+    .popup-bar-fill.orange { background: linear-gradient(90deg, #FDE68A, #F59E0B); }
+    .popup-bar-fill.red { background: linear-gradient(90deg, #FECACA, #EF4444); }
+
+    .popup-bar-pct {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      min-width: 28px;
+      text-align: right;
+    }
+
+    .popup-bottom {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .popup-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--system-blue);
+      font-size: 13px;
+      font-weight: 600;
+      background: color-mix(in srgb, var(--system-blue) 8%, transparent);
+      padding: 6px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .popup-cta svg { width: 13px; height: 13px; }
+
+    .popup-dist {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--overlay-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-family: -apple-system, system-ui, sans-serif;
+    }
+
+    .loading-spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--bar-bg);
+      border-top-color: var(--system-blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 10px;
+    }
+
+    .loading-overlay.hidden { display: none; }
+
+    /* Hide Leaflet attribution on small screens */
+    .leaflet-control-attribution {
+      font-size: 9px !important;
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Disable zoom control (pinch zoom is enough on mobile) */
+    .leaflet-control-zoom { display: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <span class="header-title">Combustible</span>
+      <span class="header-subtitle">Gasolina Especial</span>
+    </div>
+    <div class="header-right">
+      <span class="pill" id="pill" style="display:none"></span>
+      <button class="refresh-btn" id="refreshBtn" title="Actualizar">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <button class="locate-btn" id="locateBtn" title="Mi ubicación">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path>
+    </svg>
+  </button>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    Cargando estaciones...
+  </div>
+
+  <script type="module">
+    import { STATIONS } from '../shared/stations.js';
+    import { fetchAllStations, getDistances } from '../shared/fetchers.js';
+
+    const pillEl = document.getElementById('pill');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const locateBtn = document.getElementById('locateBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    const DEFAULT_LAT = -17.7833;
+    const DEFAULT_LON = -63.1821;
+
+    let map;
+    let userLocation = null;
+    let userMarker = null;
+    let stationMarkers = [];
+
+    /* ── Helpers ─────────────────────────── */
+
+    function formatNumber(n) {
+      return n.toLocaleString('es-BO');
+    }
+
+    function formatLitrosShort(litros) {
+      if (litros === 0) return '0';
+      if (litros >= 1000) return Math.round(litros / 1000) + 'K';
+      return String(litros);
+    }
+
+    function getColorClass(litros, maxLitros) {
+      if (litros === 0) return 'gray';
+      const pct = litros / maxLitros;
+      if (pct >= 0.5) return 'green';
+      if (pct >= 0.2) return 'orange';
+      return 'red';
+    }
+
+    function formatDistance(km) {
+      if (km == null) return '';
+      if (km < 1) return `${Math.round(km * 1000)} m`;
+      return `${km.toFixed(1)} km`;
+    }
+
+    function getUserLocation() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          resolve(null);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+          () => resolve(null),
+          { timeout: 10000, maximumAge: 60000 }
+        );
+      });
+    }
+
+    /* ── Map init ────────────────────────── */
+
+    function initMap() {
+      map = L.map('map', {
+        zoomControl: false,
+        attributionControl: true,
+      }).setView([DEFAULT_LAT, DEFAULT_LON], 13);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Fix map size after header renders
+      setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    /* ── Markers ─────────────────────────── */
+
+    function createStationMarker(station, colorClass, litrosShort) {
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="marker-pin ${colorClass}">${litrosShort}</div>`,
+        iconSize: [0, 0],
+        iconAnchor: [0, 6],
+        popupAnchor: [0, -12],
+      });
+
+      return L.marker([station.lat, station.lon], { icon });
+    }
+
+    function buildPopupHtml(station, colorClass, litros, pct, distKm, waze) {
+      const available = litros > 0;
+      const pctRound = Math.round(pct * 100);
+
+      const barFill = available
+        ? `<div class="popup-bar-fill ${colorClass}" style="width:${Math.max(pct * 100, 5)}%"></div>`
+        : '';
+
+      const distHtml = distKm != null
+        ? `<span class="popup-dist">${formatDistance(distKm)}</span>`
+        : '';
+
+      const ctaHtml = waze
+        ? `<a class="popup-cta" href="${waze}" target="_blank" onclick="event.stopPropagation()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+            Navegar
+          </a>`
+        : '';
+
+      return `<div class="popup-content">
+        <div class="popup-name-row">
+          <span class="popup-name">${station.name}</span>
+          <div class="popup-dot ${colorClass}"></div>
+        </div>
+        <div class="popup-company">${station.company}</div>
+        <div class="popup-litros-row">
+          <span class="popup-litros${available ? '' : ' empty'}">${available ? formatNumber(litros) : '\u2014'}</span>
+          ${available ? '<span class="popup-unit">litros</span>' : ''}
+        </div>
+        <div class="popup-bar">
+          <div class="popup-bar-track">${barFill}</div>
+          <span class="popup-bar-pct">${pctRound}%</span>
+        </div>
+        <div class="popup-bottom">
+          ${ctaHtml}
+          ${distHtml}
+        </div>
+      </div>`;
+    }
+
+    function setUserMarker(lat, lon) {
+      if (userMarker) {
+        userMarker.setLatLng([lat, lon]);
+        return;
+      }
+
+      const icon = L.divIcon({
+        className: '',
+        html: '<div class="user-dot"></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      });
+
+      userMarker = L.marker([lat, lon], { icon, zIndexOffset: 1000 }).addTo(map);
+    }
+
+    /* ── Data loading ────────────────────── */
+
+    async function loadData() {
+      refreshBtn.classList.add('spinning');
+      loadingOverlay.classList.remove('hidden');
+
+      try {
+        const [location, stationResults] = await Promise.all([
+          getUserLocation(),
+          fetchAllStations(STATIONS),
+        ]);
+
+        userLocation = location;
+
+        // Build waze map
+        const wazeMap = {};
+        for (const s of STATIONS) {
+          wazeMap[s.name] = s.waze;
+        }
+
+        // Build coord map
+        const coordMap = {};
+        for (const s of STATIONS) {
+          coordMap[s.name] = { lat: s.lat, lon: s.lon };
+        }
+
+        let results = stationResults.map((r) => ({
+          ...r,
+          waze: wazeMap[r.name] || null,
+          lat: coordMap[r.name]?.lat,
+          lon: coordMap[r.name]?.lon,
+          distKm: null,
+        }));
+
+        // Get distances
+        const refLat = location ? location.lat : DEFAULT_LAT;
+        const refLon = location ? location.lon : DEFAULT_LON;
+        const withDist = await getDistances(refLat, refLon, results);
+        results = withDist.map((r) => ({
+          ...r,
+          waze: wazeMap[r.name] || null,
+          lat: coordMap[r.name]?.lat,
+          lon: coordMap[r.name]?.lon,
+        }));
+
+        const maxLitros = Math.max(...results.map((r) => r.litros), 1);
+
+        // Clear old markers
+        for (const m of stationMarkers) {
+          map.removeLayer(m);
+        }
+        stationMarkers = [];
+
+        // Add station markers
+        const bounds = [];
+        for (const r of results) {
+          if (r.lat == null || r.lon == null) continue;
+
+          const colorClass = getColorClass(r.litros, maxLitros);
+          const litrosShort = formatLitrosShort(r.litros);
+          const pct = r.litros > 0 ? r.litros / maxLitros : 0;
+
+          const marker = createStationMarker(r, colorClass, litrosShort);
+          const popupHtml = buildPopupHtml(r, colorClass, r.litros, pct, r.distKm, r.waze);
+          marker.bindPopup(popupHtml, { maxWidth: 280, minWidth: 260 });
+          marker.addTo(map);
+          stationMarkers.push(marker);
+          bounds.push([r.lat, r.lon]);
+        }
+
+        // User location
+        if (location) {
+          setUserMarker(location.lat, location.lon);
+          bounds.push([location.lat, location.lon]);
+        }
+
+        // Fit bounds
+        if (bounds.length > 0) {
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+        }
+
+        // Update pill
+        const countAvail = results.filter((r) => r.litros > 0).length;
+        pillEl.textContent = `${countAvail}/${results.length}`;
+        pillEl.style.display = '';
+      } catch (err) {
+        console.error('Error cargando datos:', err);
+      } finally {
+        refreshBtn.classList.remove('spinning');
+        loadingOverlay.classList.add('hidden');
+      }
+    }
+
+    /* ── Events ──────────────────────────── */
+
+    refreshBtn.addEventListener('click', loadData);
+
+    locateBtn.addEventListener('click', async () => {
+      const loc = await getUserLocation();
+      if (loc) {
+        userLocation = loc;
+        setUserMarker(loc.lat, loc.lon);
+        map.setView([loc.lat, loc.lon], 14, { animate: true });
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') loadData();
+    });
+
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) loadData();
+    });
+
+    /* ── Init ────────────────────────────── */
+
+    initMap();
+    loadData();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch((err) => {
+        console.log('SW registro fallido:', err);
+      });
+    }
+  </script>
+</body>
+</html>
