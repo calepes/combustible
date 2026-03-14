@@ -18,6 +18,12 @@ git clone git@github.com:calepes/combustible.git
 
 No hay dependencias npm. Todo es vanilla JS.
 
+### Desarrollo local
+```bash
+cd pwa && python3 -m http.server 8000
+# Abrir http://localhost:8000/cards/ o /map/ o /list/
+```
+
 ## Deploy
 
 ### PWA (GitHub Pages)
@@ -45,6 +51,7 @@ Push a la rama correspondiente → el loader en Scriptable descarga automáticam
 
 ```
 pwa/
+├── list/index.html     ← Vista lista simple (tabla de estaciones)
 ├── cards/index.html    ← Vista journey (timeline vertical, icono 3D)
 ├── map/index.html      ← Vista mapa (Google Maps, markers con litros)
 └── shared/
