@@ -13,7 +13,7 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 |---|-------------|-----------|--------|-------|
 | B1 | ~~Distancia no coincide con Waze real~~ | alta | hecho | Resuelto con Google Distance Matrix API (2026-03-14) |
 | B2 | Timeline desalineado con dots (cards) | baja | pendiente | `left: 9px` vs centro de dots. Cosmético |
-| B3 | Coordenadas estimadas en estaciones | media | en progreso | Pirai y López corregidas. Pendientes: Berea, La Teca, Lucyfer, Monteverde, Parapetí, Sur Central y otras |
+| B3 | Coordenadas estimadas en estaciones | media | en progreso | 17 estaciones corregidas (2026-03-14). Pendientes: Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas |
 
 ## Mejoras
 
@@ -47,4 +47,8 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 | 2026-03-14 | — | Ajuste hue-rotate de iconos para coincidir con barra de stock |
 | 2026-03-14 | — | Vista mapa PWA: Leaflet → Google Maps JS API |
 | 2026-03-14 | B3 | Coordenadas Pirai y López corregidas |
-| 2026-03-14 | M1 | Google Maps API key creada — abre opción de usar Directions API para distancias |
+| 2026-03-14 | M1 | Google Distance Matrix API implementado (client-side). Fallback: OSRM → Haversine |
+| 2026-03-14 | B3 | 17 estaciones corregidas con coords de Google Maps/Waze. Pendientes: Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas |
+| 2026-03-14 | I1 | Agregada idea: Waze en móvil, Google Maps en desktop |
+| 2026-03-14 | — | CLAUDE.md actualizado con arquitectura completa (map view, Distance Matrix, SW versions) |
+| 2026-03-14 | — | PENDIENTES.md eliminado — supersedido por BACKLOG.md |
