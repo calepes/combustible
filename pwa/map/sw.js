@@ -1,4 +1,4 @@
-const CACHE_NAME = 'combustible-map-v3';
+const CACHE_NAME = 'combustible-map-v4';
 
 const APP_SHELL = [
   './',
@@ -6,9 +6,9 @@ const APP_SHELL = [
   './manifest.json',
   '../shared/stations.js',
   '../shared/fetchers.js',
-  '../shared/icons/icon-192.png',
-  '../shared/icons/icon-512.png',
-  '../shared/icons/apple-touch-icon.png',
+  './icons/icon-map-192.png',
+  './icons/icon-map-512.png',
+  './icons/apple-touch-icon.png',
 ];
 
 /* ── Install: cache app shell ──────────── */
