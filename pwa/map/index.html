@@ -604,8 +604,11 @@
           bounds.extend({ lat: location.lat, lng: location.lon });
         }
 
-        // Fit bounds
-        if (!bounds.isEmpty()) {
+        // Center on user location, fallback to fitBounds
+        if (location) {
+          map.setCenter({ lat: location.lat, lng: location.lon });
+          map.setZoom(14);
+        } else if (!bounds.isEmpty()) {
           map.fitBounds(bounds, { top: 80, bottom: 40, left: 20, right: 20 });
         }
 
