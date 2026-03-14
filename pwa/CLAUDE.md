@@ -32,7 +32,7 @@ Las vistas muestran el **% real** de cada estación (`litros / capacidad`). La c
 
 ## Gotchas
 
-- **SW cache bump:** cada cambio requiere incrementar `CACHE_NAME` en el `sw.js` de cada vista (cards: v14, map: v7, list: v4)
+- **SW cache bump:** cada cambio requiere incrementar `CACHE_NAME` en el `sw.js` de cada vista (cards: v15, map: v8, list: v5)
 - **Google Maps API Key:** hardcoded en `map/index.html` y `cards/index.html`. Restringida a `apps.lepesqueur.net` y `localhost`
 - **Distance Matrix:** client-side via `google.maps.DistanceMatrixService`, batch de 25 destinos por request
 - **Rivero parser:** Google Sheets chartJson es frágil — múltiples fallbacks de deserialización

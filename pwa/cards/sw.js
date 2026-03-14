@@ -1,4 +1,4 @@
-const CACHE_NAME = 'combustible-cards-v14';
+const CACHE_NAME = 'combustible-cards-v15';
 
 const APP_SHELL = [
   './',
@@ -43,6 +43,20 @@ self.addEventListener('fetch', (event) => {
     url.pathname.includes('workers.dev') ||
     url.pathname.includes('osrm')
   ) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Shared JS (stations, fetchers) — network first (config changes must propagate)
+  if (url.pathname.includes('/shared/') && url.pathname.endsWith('.js')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {

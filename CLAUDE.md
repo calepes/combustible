@@ -117,7 +117,7 @@ pwa/
 
 ## Gotchas
 
-- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v14, map: v7, list: v4)
+- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v15, map: v8, list: v5). `shared/*.js` es network-first, no requiere bump para cambios en stations/fetchers
 - **Gasgroup/Orsa:** umbral mínimo de 1,500 Lts para filtrar lecturas erráticas
 - **Rivero:** parsing de Google Sheets chartJson — frágil, múltiples fallbacks de deserialización
 - **Coordenadas:** verificadas via Google Places API (2026-03-14). Lucyfer, Parapetí y Montecristo eliminadas (fuera de SCZ o no verificables)
