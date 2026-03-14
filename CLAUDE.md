@@ -7,7 +7,7 @@ Monorepo para monitorear disponibilidad de Gasolina Especial en Santa Cruz de la
 | Dir | Qué es | Stack |
 |-----|--------|-------|
 | `widget/` | Widgets Scriptable (iOS) | JS standalone, Scriptable API |
-| `pwa/` | Progressive Web Apps (cards, map) | HTML/CSS/JS, ES modules |
+| `pwa/` | Progressive Web Apps (cards, list, map) | HTML/CSS/JS, ES modules |
 | `proxy/` | CORS proxy para APIs externas | Cloudflare Worker |
 
 ## Setup
@@ -63,7 +63,7 @@ pwa/
 ├── cards/index.html    ← Vista journey (timeline vertical, icono 3D)
 ├── map/index.html      ← Vista mapa (Google Maps, markers con litros)
 └── shared/
-    ├── stations.js     ← Config de 30 estaciones (coords, URLs, keys)
+    ├── stations.js     ← Config de 27 estaciones (coords, URLs, keys)
     ├── fetchers.js     ← Fetch via proxy, parsers por tipo, distancias Google/OSRM
     └── icons/          ← PNG icons (bomba 3D de thiings.co)
 ```
@@ -107,10 +107,10 @@ pwa/
 
 ## Gotchas
 
-- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v13, map: v7, list: v4)
+- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v14, map: v7, list: v4)
 - **Gasgroup/Orsa:** umbral mínimo de 1,500 Lts para filtrar lecturas erráticas
 - **Rivero:** parsing de Google Sheets chartJson — frágil, múltiples fallbacks de deserialización
-- **Coordenadas:** 7 estaciones (Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas, Orsa Alemana) pendientes de verificación exacta
+- **Coordenadas:** verificadas via Google Places API (2026-03-14). Lucyfer, Parapetí y Montecristo eliminadas (fuera de SCZ o no verificables)
 - **Loaders Scriptable:** son copias locales, no se actualizan desde GitHub automáticamente
 - **Deploy duplicado:** `calepes.github.io` tiene copia vieja en `/combustible/pwa/` — la fuente real es el repo `combustible`
 - **API Key Google Maps:** guardada en `pwa/map/Api Maps` (gitignored). Restringida a `apps.lepesqueur.net` y `localhost`

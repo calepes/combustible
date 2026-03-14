@@ -13,7 +13,7 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 |---|-------------|-----------|--------|-------|
 | B1 | ~~Distancia no coincide con Waze real~~ | alta | hecho | Resuelto con Google Distance Matrix API (2026-03-14) |
 | B2 | ~~Timeline desalineado con dots (cards)~~ | baja | hecho | Resuelto (2026-03-14) |
-| B3 | Coordenadas estimadas en estaciones | media | en progreso | 17 estaciones corregidas (2026-03-14). Pendientes: Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas, Orsa Alemana |
+| B3 | ~~Coordenadas estimadas en estaciones~~ | media | hecho | Todas verificadas via Google Places API (2026-03-14). Lucyfer, Parapetí y Montecristo eliminadas (fuera de SCZ o no verificables). 30 → 27 estaciones |
 
 ## Mejoras
 

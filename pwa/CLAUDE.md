@@ -12,7 +12,7 @@ Contexto general del repo en `../CLAUDE.md`.
 
 ## Shared
 
-- `shared/stations.js` — Config de 30 estaciones (coords, URLs, keys, tipo)
+- `shared/stations.js` — Config de 27 estaciones (coords, URLs, keys, tipo)
 - `shared/fetchers.js` — Fetch via proxy, parsers por tipo, distancias (Google → OSRM → Haversine)
 - `shared/icons/` — PNG icons bomba 3D (192, 512, apple-touch-icon)
 
@@ -25,7 +25,7 @@ python3 -m http.server 8000
 
 ## Gotchas
 
-- **SW cache bump:** cada cambio requiere incrementar `CACHE_NAME` en el `sw.js` de cada vista (cards: v13, map: v7, list: v4)
+- **SW cache bump:** cada cambio requiere incrementar `CACHE_NAME` en el `sw.js` de cada vista (cards: v14, map: v7, list: v4)
 - **Google Maps API Key:** hardcoded en `map/index.html` y `cards/index.html`. Restringida a `apps.lepesqueur.net` y `localhost`
 - **Distance Matrix:** client-side via `google.maps.DistanceMatrixService`, batch de 25 destinos por request
 - **Rivero parser:** Google Sheets chartJson es frágil — múltiples fallbacks de deserialización

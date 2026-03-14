@@ -11,12 +11,12 @@ Monitoreo en tiempo real de disponibilidad de **Gasolina Especial** en estacione
 | Lista | [apps.lepesqueur.net/combustible/pwa/list/](https://apps.lepesqueur.net/combustible/pwa/list/) | Lista simple de estaciones |
 | Widget iOS | Scriptable | Widget nativo para Home Screen |
 
-## 30 estaciones monitoreadas
+## 27 estaciones monitoreadas
 
 | Empresa | Estaciones | Fuente |
 |---------|------------|--------|
 | Genex (11) | Banzer, Vangas, Guaracachi, Trompillo, III, Mutualista, V, IV, II, Jarajorechi, Aracataca | HTML scraping genex.com.bo |
-| Biopetrol (16) | Equipetrol, Pirai, Alemana, López, Viru Viru, Gasco, Beni, Berea, Cabezas, La Teca, Lucyfer, Montecristo, Monteverde, Paraguá, Parapetí, Sur Central | HTML scraping EC2 |
+| Biopetrol (13) | Equipetrol, Pirai, Alemana, López, Viru Viru, Gasco, Beni, Berea, Cabezas, La Teca, Monteverde, Paraguá, Sur Central | HTML scraping EC2 |
 | Orsa (2) | Urubó, Alemana | API JSON gasgroup.com.bo |
 | Rivero (1) | Rivero | Google Sheets chartJson |
 
