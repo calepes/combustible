@@ -13,7 +13,7 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 |---|-------------|-----------|--------|-------|
 | B1 | ~~Distancia no coincide con Waze real~~ | alta | hecho | Resuelto con Google Distance Matrix API (2026-03-14) |
 | B2 | ~~Timeline desalineado con dots (cards)~~ | baja | hecho | Resuelto (2026-03-14) |
-| B3 | Coordenadas estimadas en estaciones | media | en progreso | 17 estaciones corregidas (2026-03-14). Pendientes: Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas |
+| B3 | Coordenadas estimadas en estaciones | media | en progreso | 17 estaciones corregidas (2026-03-14). Pendientes: Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas, Orsa Alemana |
 
 ## Mejoras
 
@@ -22,7 +22,7 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 | M1 | ~~Migrar API de distancias~~ | alta | hecho | Google Distance Matrix implementado (2026-03-14). Fallback: OSRM → Haversine |
 | M2 | Validar colores de icono 3D en móvil | media | pendiente | hue-rotate verde/naranja/rojo/gris — verificar que se ven bien en cel |
 | M3 | Limpiar deploy duplicado | baja | pendiente | Eliminar copia vieja en `calepes.github.io/combustible/pwa/` |
-| M4 | ~~SW: network-first para index.html~~ | baja | hecho | Implementado en cards (v11), list (v2), map (v6). 2026-03-14 |
+| M4 | ~~SW: network-first para index.html~~ | baja | hecho | Implementado en cards (v12), list (v3), map (v7). 2026-03-14 |
 
 ## Ideas
 
@@ -52,3 +52,4 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 | 2026-03-14 | I1 | Agregada idea: Waze en móvil, Google Maps en desktop |
 | 2026-03-14 | — | CLAUDE.md actualizado con arquitectura completa (map view, Distance Matrix, SW versions) |
 | 2026-03-14 | — | PENDIENTES.md eliminado — supersedido por BACKLOG.md |
+| 2026-03-14 | — | Estación Orsa Alemana agregada (gasgroup 39gbIJkJ). Total: 30 estaciones. SW cache bump: cards v12, map v7, list v3 |

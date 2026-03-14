@@ -55,7 +55,7 @@ pwa/
 ├── cards/index.html    ← Vista journey (timeline vertical, icono 3D)
 ├── map/index.html      ← Vista mapa (Google Maps, markers con litros)
 └── shared/
-    ├── stations.js     ← Config de 29 estaciones (coords, URLs, keys)
+    ├── stations.js     ← Config de 30 estaciones (coords, URLs, keys)
     ├── fetchers.js     ← Fetch via proxy, parsers por tipo, distancias Google/OSRM
     └── icons/          ← PNG icons (bomba 3D de thiings.co)
 ```
@@ -99,10 +99,10 @@ pwa/
 
 ## Gotchas
 
-- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v10, map: v3)
+- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v12, map: v7, list: v3)
 - **Gasgroup/Orsa:** umbral mínimo de 1,500 Lts para filtrar lecturas erráticas
 - **Rivero:** parsing de Google Sheets chartJson — frágil, múltiples fallbacks de deserialización
-- **Coordenadas:** 6 estaciones (Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas) pendientes de verificación exacta
+- **Coordenadas:** 7 estaciones (Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas, Orsa Alemana) pendientes de verificación exacta
 - **Loaders Scriptable:** son copias locales, no se actualizan desde GitHub automáticamente
 - **Deploy duplicado:** `calepes.github.io` tiene copia vieja en `/combustible/pwa/` — la fuente real es el repo `combustible`
 - **API Key Google Maps:** guardada en `pwa/map/Api Maps` (gitignored). Restringida a `apps.lepesqueur.net` y `localhost`
