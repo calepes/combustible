@@ -12,7 +12,7 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 | # | Descripción | Prioridad | Estado | Notas |
 |---|-------------|-----------|--------|-------|
 | B1 | ~~Distancia no coincide con Waze real~~ | alta | hecho | Resuelto con Google Distance Matrix API (2026-03-14) |
-| B2 | Timeline desalineado con dots (cards) | baja | pendiente | `left: 9px` vs centro de dots. Cosmético |
+| B2 | ~~Timeline desalineado con dots (cards)~~ | baja | hecho | Resuelto (2026-03-14) |
 | B3 | Coordenadas estimadas en estaciones | media | en progreso | 17 estaciones corregidas (2026-03-14). Pendientes: Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas |
 
 ## Mejoras
