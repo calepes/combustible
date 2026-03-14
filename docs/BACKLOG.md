@@ -20,8 +20,8 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 | # | Descripción | Prioridad | Estado | Notas |
 |---|-------------|-----------|--------|-------|
 | M1 | ~~Migrar API de distancias~~ | alta | hecho | Google Distance Matrix implementado (2026-03-14). Fallback: OSRM → Haversine |
-| M2 | Validar colores de icono 3D en móvil | media | pendiente | hue-rotate verde/naranja/rojo/gris — verificar que se ven bien en cel |
-| M3 | Limpiar deploy duplicado | baja | pendiente | Eliminar copia vieja en `calepes.github.io/combustible/pwa/` |
+| M2 | ~~Validar colores de icono 3D en móvil~~ | media | hecho | hue-rotate verde/naranja/rojo/gris — verificado en móvil (2026-03-14) |
+| M3 | ~~Limpiar deploy duplicado~~ | baja | hecho | Eliminada copia vieja en `calepes.github.io/combustible/pwa/` (2026-03-14) |
 | M4 | ~~SW: network-first para index.html~~ | baja | hecho | Implementado en cards (v12), list (v3), map (v7). 2026-03-14 |
 | M5 | ~~Capacidad estimada por estación (% real)~~ | alta | hecho | Cloudflare KV trackea max histórico. PWA reporta litros → proxy actualiza KV → % real = litros/capacidad. 2026-03-14 |
 
@@ -29,7 +29,7 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 
 | # | Descripción | Prioridad | Estado | Notas |
 |---|-------------|-----------|--------|-------|
-| I1 | Navegar: Waze en móvil, Google Maps en desktop | media | pendiente | Detectar si es mobile/desktop y abrir Waze o Google Maps respectivamente |
+| I1 | ~~Navegar: Waze en móvil, Google Maps en desktop~~ | media | hecho | `getNavUrl()` en fetchers.js detecta plataforma. Móvil → Waze, desktop → Google Maps directions (2026-03-14) |
 
 ## Hecho
 

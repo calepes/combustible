@@ -30,6 +30,16 @@ export function normalizeLiters(raw) {
   return digits ? Number(digits) : 0;
 }
 
+/**
+ * Retorna URL de navegacion segun plataforma:
+ * movil → Waze (deep link), desktop → Google Maps directions
+ */
+export function getNavUrl(station) {
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isMobile) return station.waze;
+  return `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lon}`;
+}
+
 /* ── Parsers ──────────────────────────── */
 
 /**

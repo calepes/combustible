@@ -250,7 +250,7 @@
 
   <script type="module">
     import { STATIONS } from '../shared/stations.js';
-    import { fetchAllStations } from '../shared/fetchers.js';
+    import { fetchAllStations, getNavUrl } from '../shared/fetchers.js';
 
     const listCard = document.getElementById('listCard');
     const loading = document.getElementById('loading');
@@ -313,11 +313,11 @@
           row.appendChild(company);
           row.appendChild(litros);
 
-          // Find the matching station for the waze link
+          // Navigation link: Waze on mobile, Google Maps on desktop
           const station = STATIONS.find(s => s.name === r.name);
-          if (station?.waze) {
+          if (station) {
             row.addEventListener('click', () => {
-              window.open(station.waze, '_blank');
+              window.open(getNavUrl(station), '_blank');
             });
           }
 

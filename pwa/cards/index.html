@@ -446,7 +446,7 @@
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCeQumrwhLuL4n8PTcFrMuq5tt4ipwUu_s"></script>
   <script type="module">
     import { STATIONS } from '../shared/stations.js';
-    import { fetchAllStations, getDistances, haversineKm } from '../shared/fetchers.js';
+    import { fetchAllStations, getDistances, haversineKm, getNavUrl } from '../shared/fetchers.js';
 
     const contentEl = document.getElementById('content');
     const pillEl = document.getElementById('pill');
@@ -552,8 +552,8 @@
         // Right: card
         const card = document.createElement('div');
         card.className = `station-card${available ? '' : ' dimmed'}`;
-        if (r.waze) {
-          card.addEventListener('click', () => window.open(r.waze, '_blank'));
+        if (r.navUrl) {
+          card.addEventListener('click', () => window.open(r.navUrl, '_blank'));
         }
 
         const header = document.createElement('div');
@@ -656,15 +656,15 @@
           fetchAllStations(STATIONS),
         ]);
 
-        // Add waze links back from STATIONS config
+        // Map station config by name for nav links
         const stationMap = {};
         for (const s of STATIONS) {
-          stationMap[s.name] = s.waze;
+          stationMap[s.name] = s;
         }
 
         let results = stationResults.map((r) => ({
           ...r,
-          waze: stationMap[r.name] || null,
+          navUrl: stationMap[r.name] ? getNavUrl(stationMap[r.name]) : null,
           distKm: null,
         }));
 
@@ -674,7 +674,7 @@
         const withDist = await getDistances(refLat, refLon, results);
         results = withDist.map((r) => ({
           ...r,
-          waze: stationMap[r.name] || null,
+          navUrl: stationMap[r.name] ? getNavUrl(stationMap[r.name]) : null,
         }));
 
         // Sort by distance

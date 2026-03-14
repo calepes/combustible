@@ -343,7 +343,7 @@
 
   <script type="module">
     import { STATIONS } from '../shared/stations.js';
-    import { fetchAllStations, getDistances } from '../shared/fetchers.js';
+    import { fetchAllStations, getDistances, getNavUrl } from '../shared/fetchers.js';
 
     const pillEl = document.getElementById('pill');
     const refreshBtn = document.getElementById('refreshBtn');
@@ -421,7 +421,7 @@
 
     /* ── InfoWindow HTML ─────────────────── */
 
-    function buildInfoWindowHtml(station, colorClass, litros, pct, distKm, waze) {
+    function buildInfoWindowHtml(station, colorClass, litros, pct, distKm, navUrl) {
       const available = litros > 0;
       const pctRound = Math.round(pct * 100);
 
@@ -433,8 +433,8 @@
         ? `<span class="iw-dist">${formatDistance(distKm)}</span>`
         : '';
 
-      const ctaHtml = waze
-        ? `<a class="iw-cta" href="${waze}" target="_blank">
+      const ctaHtml = navUrl
+        ? `<a class="iw-cta" href="${navUrl}" target="_blank">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
             Navegar
           </a>`
@@ -505,16 +505,16 @@
           fetchAllStations(STATIONS),
         ]);
 
-        const wazeMap = {};
+        const stationMap = {};
         const coordMap = {};
         for (const s of STATIONS) {
-          wazeMap[s.name] = s.waze;
+          stationMap[s.name] = s;
           coordMap[s.name] = { lat: s.lat, lon: s.lon };
         }
 
         let results = stationResults.map((r) => ({
           ...r,
-          waze: wazeMap[r.name] || null,
+          navUrl: stationMap[r.name] ? getNavUrl(stationMap[r.name]) : null,
           lat: coordMap[r.name]?.lat,
           lon: coordMap[r.name]?.lon,
           distKm: null,
@@ -525,7 +525,7 @@
         const withDist = await getDistances(refLat, refLon, results);
         results = withDist.map((r) => ({
           ...r,
-          waze: wazeMap[r.name] || null,
+          navUrl: stationMap[r.name] ? getNavUrl(stationMap[r.name]) : null,
           lat: coordMap[r.name]?.lat,
           lon: coordMap[r.name]?.lon,
         }));
@@ -566,7 +566,7 @@
             optimized: false,
           });
 
-          const infoHtml = buildInfoWindowHtml(r, colorClass, r.litros, pct, r.distKm, r.waze);
+          const infoHtml = buildInfoWindowHtml(r, colorClass, r.litros, pct, r.distKm, r.navUrl);
           const infoWindow = new google.maps.InfoWindow({
             content: infoHtml,
             maxWidth: 280,
