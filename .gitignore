@@ -12,3 +12,6 @@ pwa/map/Api Maps
 
 # Node
 node_modules/
+
+# Test results
+test-results/
