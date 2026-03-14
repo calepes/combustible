@@ -279,6 +279,15 @@ export const STATIONS = [
     product: "GASOLINA ESPECIAL",
     waze: "https://waze.com/ul?q=Orsa%20Urubo%20Santa%20Cruz%20Bolivia&navigate=yes",
   },
+  {
+    name: "Orsa Alemana",
+    type: "gasgroup",
+    company: "Orsa",
+    lat: -17.7530, lon: -63.1630,
+    url: "https://gasgroup.com.bo/api/obtener-datos-temporales/39gbIJkJ",
+    product: "GASOLINA ESPECIAL",
+    waze: "https://waze.com/ul?q=Surtidor%20Orsa%20Alemana%204to%20Anillo%20Santa%20Cruz%20Bolivia&navigate=yes",
+  },
 
   // ── Rivero (Google Sheets) ─────────────
   {
