@@ -16,7 +16,14 @@ Monorepo para monitorear disponibilidad de Gasolina Especial en Santa Cruz de la
 git clone git@github.com:calepes/combustible.git
 ```
 
-No hay dependencias npm. Todo es vanilla JS.
+No hay dependencias npm en producción. Todo es vanilla JS.
+
+### Tests
+```bash
+npm install
+npm test
+```
+CI: GitHub Actions (`test.yml`) corre tests en push a `main`.
 
 ### Desarrollo local
 ```bash
@@ -29,6 +36,7 @@ cd pwa && python3 -m http.server 8000
 ### PWA (GitHub Pages)
 Push a `main` → deploya automáticamente en `apps.lepesqueur.net/combustible/`
 - Cards: `apps.lepesqueur.net/combustible/pwa/cards/`
+- Lista: `apps.lepesqueur.net/combustible/pwa/list/`
 - Mapa: `apps.lepesqueur.net/combustible/pwa/map/`
 - Pages está configurado en el repo `calepes/combustible` (no en `calepes.github.io`)
 
@@ -99,7 +107,7 @@ pwa/
 
 ## Gotchas
 
-- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v12, map: v7, list: v3)
+- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v13, map: v7, list: v4)
 - **Gasgroup/Orsa:** umbral mínimo de 1,500 Lts para filtrar lecturas erráticas
 - **Rivero:** parsing de Google Sheets chartJson — frágil, múltiples fallbacks de deserialización
 - **Coordenadas:** 7 estaciones (Lucyfer, Montecristo, Monteverde, Parapetí, Gasco, Cabezas, Orsa Alemana) pendientes de verificación exacta

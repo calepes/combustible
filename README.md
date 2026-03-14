@@ -8,15 +8,16 @@ Monitoreo en tiempo real de disponibilidad de **Gasolina Especial** en estacione
 |-----|-----|-------------|
 | Cards | [apps.lepesqueur.net/combustible/pwa/cards/](https://apps.lepesqueur.net/combustible/pwa/cards/) | Timeline vertical ordenado por distancia |
 | Mapa | [apps.lepesqueur.net/combustible/pwa/map/](https://apps.lepesqueur.net/combustible/pwa/map/) | Google Maps con markers de litros disponibles |
+| Lista | [apps.lepesqueur.net/combustible/pwa/list/](https://apps.lepesqueur.net/combustible/pwa/list/) | Lista simple de estaciones |
 | Widget iOS | Scriptable | Widget nativo para Home Screen |
 
-## 29 estaciones monitoreadas
+## 30 estaciones monitoreadas
 
 | Empresa | Estaciones | Fuente |
 |---------|------------|--------|
 | Genex (11) | Banzer, Vangas, Guaracachi, Trompillo, III, Mutualista, V, IV, II, Jarajorechi, Aracataca | HTML scraping genex.com.bo |
 | Biopetrol (16) | Equipetrol, Pirai, Alemana, López, Viru Viru, Gasco, Beni, Berea, Cabezas, La Teca, Lucyfer, Montecristo, Monteverde, Paraguá, Parapetí, Sur Central | HTML scraping EC2 |
-| Orsa (1) | Urubó | API JSON gasgroup.com.bo |
+| Orsa (2) | Urubó, Alemana | API JSON gasgroup.com.bo |
 | Rivero (1) | Rivero | Google Sheets chartJson |
 
 ## Stack
@@ -34,10 +35,12 @@ Monitoreo en tiempo real de disponibilidad de **Gasolina Especial** en estacione
 widget/          ← Widgets Scriptable (iOS)
 pwa/
 ├── cards/       ← Vista journey (timeline vertical, icono 3D)
+├── list/        ← Vista lista (tabla de estaciones)
 ├── map/         ← Vista mapa (Google Maps, markers con litros)
 └── shared/      ← stations.js, fetchers.js, icons/
 proxy/           ← Cloudflare Worker (CORS proxy)
-docs/            ← Backlog, specs
+docs/            ← Backlog, specs, planes
+tests/           ← Tests (Vitest)
 ```
 
 ## Setup
@@ -46,7 +49,14 @@ docs/            ← Backlog, specs
 git clone git@github.com:calepes/combustible.git
 ```
 
-No hay dependencias npm. Todo es vanilla JS.
+No hay dependencias npm para producción. Todo es vanilla JS.
+
+### Tests
+
+```bash
+npm install
+npm test
+```
 
 ## Deploy
 
