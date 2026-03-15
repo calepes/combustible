@@ -475,22 +475,23 @@
         streetViewControl: false,
         fullscreenControl: false,
         gestureHandling: 'greedy',
-        mapId: isDark ? 'DEMO_MAP_ID' : undefined,
-        styles: isDark ? [
-          { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
-          { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
-          { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
-          { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
-          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
+        styles: [
+          // Ocultar todo por defecto
+          { featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] },
           { featureType: 'poi', stylers: [{ visibility: 'off' }] },
           { featureType: 'transit', stylers: [{ visibility: 'off' }] },
           { featureType: 'landscape.man_made', stylers: [{ visibility: 'off' }] },
-        ] : [
-          { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-          { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-          { featureType: 'landscape.man_made', stylers: [{ visibility: 'off' }] },
+          // Solo mostrar labels de calles
+          { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'on' }] },
+          // Dark mode colors
+          ...(isDark ? [
+            { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+            { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
+            { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
+            { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
+            { featureType: 'road', elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
+          ] : []),
         ],
       });
     }
