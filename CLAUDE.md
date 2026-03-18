@@ -117,7 +117,12 @@ pwa/
 
 ## Gotchas
 
-- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v16, map: v9, list: v6). `shared/*.js` es network-first, no requiere bump para cambios en stations/fetchers
+- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v17, map: v11, list: v8). `shared/*.js` es network-first, pero cambios en fetchers.js/stations.js igual requieren bump porque el SW cachea el HTML que los importa
+- **fetchStation resiliencia:** `fetchStation()` tiene try-catch individual — si una fuente falla (EC2 caído, genex timeout), esa estación retorna 0 litros sin afectar al resto. Nunca usar `Promise.all` sin manejo de errores individuales
+- **fetchCache se limpia por batch:** el cache de respuestas HTTP en `fetchers.js` se resetea al inicio de cada `fetchAllStations()`. Esto asegura que el botón refresh traiga datos frescos. Sin esto, errores de red quedan cacheados y el refresh no funciona
+- **loadData guard + debounce:** todas las vistas tienen `isLoading` guard y `scheduleReload()` con debounce de 300ms. Sin esto, `visibilitychange` + `pageshow` + `focus` disparan 2-3 cargas simultáneas al volver a la app
+- **Mapa: timeout Google Maps API:** si la API no carga en 15s (key revocada, red), muestra error en vez de loading infinito
+- **Mapa: overlay solo en primera carga:** las recargas (visibility, refresh) solo muestran spinner en el botón, no tapan el mapa con overlay
 - **Gasgroup/Orsa:** umbral mínimo de 1,500 Lts para filtrar lecturas erráticas
 - **Rivero:** parsing de Google Sheets chartJson — frágil, múltiples fallbacks de deserialización
 - **Coordenadas:** verificadas via Google Places API (2026-03-14). Lucyfer, Parapetí y Montecristo eliminadas (fuera de SCZ o no verificables)

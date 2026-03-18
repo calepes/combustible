@@ -14,6 +14,12 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 | B1 | ~~Distancia no coincide con Waze real~~ | alta | hecho | Resuelto con Google Distance Matrix API (2026-03-14) |
 | B2 | ~~Timeline desalineado con dots (cards)~~ | baja | hecho | Resuelto (2026-03-14) |
 | B3 | ~~Coordenadas estimadas en estaciones~~ | media | hecho | Todas verificadas via Google Places API (2026-03-14). Lucyfer, Parapetí y Montecristo eliminadas (fuera de SCZ o no verificables). 30 → 27 estaciones |
+| B4 | ~~fetchStation sin try-catch rompe toda la app~~ | alta | hecho | Si una fuente fallaba, Promise.all rechazaba y todas las estaciones mostraban error. Agregado try-catch individual (2026-03-18) |
+| B5 | ~~fetchCache nunca se limpia — refresh no refresca~~ | alta | hecho | Cache de respuestas persistía toda la sesión. Errores quedaban cacheados. Se limpia al inicio de cada batch (2026-03-18) |
+| B6 | ~~loadData se ejecuta múltiples veces en paralelo~~ | media | hecho | visibilitychange + pageshow + focus disparaban 2-3 cargas simultáneas. Agregado isLoading guard + debounce 300ms (2026-03-18) |
+| B7 | ~~Mapa: loading infinito si Google Maps API falla~~ | media | hecho | Agregado timeout de 15s con mensaje de error (2026-03-18) |
+| B8 | ~~Mapa: error silencioso en loadData~~ | media | hecho | catch solo logueaba a console. Ahora muestra error visible al usuario (2026-03-18) |
+| B9 | ~~List: no recargaba al volver de Waze~~ | media | hecho | Faltaban listeners visibilitychange + pageshow. Agregados (2026-03-18) |
 
 ## Mejoras
 
@@ -55,3 +61,4 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 | 2026-03-14 | — | PENDIENTES.md eliminado — supersedido por BACKLOG.md |
 | 2026-03-14 | — | Estación Orsa Alemana agregada (gasgroup 39gbIJkJ). Total: 30 estaciones. SW cache bump: cards v12, map v7, list v3 |
 | 2026-03-14 | M5 | Capacidad estimada por estación via Cloudflare KV. % real en cards, map y list. Tests para worker (17 nuevos) |
+| 2026-03-18 | B4–B9 | Fix prod: fetchStation try-catch, fetchCache limpio por batch, loadData guard+debounce, mapa timeout/error/overlay, list recarga al volver |
