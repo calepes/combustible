@@ -259,17 +259,30 @@
     const footerTime = document.getElementById('footerTime');
     const refreshBtn = document.getElementById('refreshBtn');
 
+    // Mapa de estaciones por nombre para lookup O(1)
+    const stationMap = {};
+    for (const s of STATIONS) stationMap[s.name] = s;
+
+    let isLoading = false;
+    let firstLoad = true;
+
     async function loadData() {
-      loading.style.display = 'block';
-      listCard.querySelectorAll('.row, .row-separator').forEach(el => el.remove());
-      pill.style.display = 'none';
-      footerTime.textContent = '';
+      if (isLoading) return;
+      isLoading = true;
+
+      // Solo mostrar "Cargando..." en la primera carga
+      if (firstLoad) {
+        loading.style.display = 'block';
+        listCard.querySelectorAll('.row, .row-separator').forEach(el => el.remove());
+      }
 
       try {
         const results = await fetchAllStations(STATIONS);
         results.sort((a, b) => b.litros - a.litros);
 
+        // Limpiar filas previas y ocultar loading
         loading.style.display = 'none';
+        listCard.querySelectorAll('.row, .row-separator').forEach(el => el.remove());
 
         const countAvail = results.filter(r => r.litros > 0).length;
         pillText.textContent = `${countAvail}/${results.length}`;
@@ -314,7 +327,7 @@
           row.appendChild(litros);
 
           // Navigation link: Waze on mobile, Google Maps on desktop
-          const station = STATIONS.find(s => s.name === r.name);
+          const station = stationMap[r.name];
           if (station) {
             row.addEventListener('click', () => {
               window.open(getNavUrl(station), '_blank');
@@ -330,12 +343,32 @@
         const mm = String(now.getMinutes()).padStart(2, '0');
         footerTime.textContent = `Actualizado ${hh}:${mm}`;
       } catch (err) {
-        loading.textContent = 'Error al cargar datos';
+        if (firstLoad) loading.textContent = 'Error al cargar datos';
         console.error('Error:', err);
+      } finally {
+        firstLoad = false;
+        isLoading = false;
       }
     }
 
+    let reloadTimer = null;
+    function scheduleReload() {
+      if (reloadTimer) return;
+      reloadTimer = setTimeout(() => {
+        reloadTimer = null;
+        if (!isLoading) loadData();
+      }, 300);
+    }
+
     refreshBtn.addEventListener('click', loadData);
+
+    // Recargar al volver a la app (ej: después de abrir Waze)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') scheduleReload();
+    });
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) scheduleReload();
+    });
 
     // Initial load
     loadData();

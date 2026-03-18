@@ -1,4 +1,4 @@
-const CACHE_NAME = 'combustible-list-v7';
+const CACHE_NAME = 'combustible-list-v8';
 
 const APP_SHELL = [
   './',
