@@ -279,34 +279,44 @@ const fetchCache = {};
 async function cachedFetch(url, isJson) {
   const cacheKey = `${isJson ? 'json' : 'html'}:${url}`;
   if (!fetchCache[cacheKey]) {
-    fetchCache[cacheKey] = proxyFetch(url).then((resp) =>
-      isJson ? resp.json() : resp.text()
-    );
+    fetchCache[cacheKey] = proxyFetch(url).then((resp) => {
+      if (!resp.ok) {
+        console.log(`Proxy ${resp.status} para ${url}`);
+        return isJson ? null : '';
+      }
+      return isJson ? resp.json() : resp.text();
+    });
   }
   return fetchCache[cacheKey];
 }
 
 /**
  * Obtiene litros de una estacion segun su tipo.
+ * Retorna 0 si falla (nunca lanza error).
  */
 async function fetchStation(s) {
-  if (s.type === 'genex') {
-    const html = await cachedFetch(s.url, false);
-    return parseGenex(html, s.key, s.fuel);
+  try {
+    if (s.type === 'genex') {
+      const html = await cachedFetch(s.url, false);
+      return parseGenex(html, s.key, s.fuel);
+    }
+    if (s.type === 'ec2') {
+      const html = await cachedFetch(s.url, false);
+      return parseEC2(html, s.key);
+    }
+    if (s.type === 'gasgroup') {
+      const json = await cachedFetch(s.url, true);
+      return parseGasGroup(json, s.product);
+    }
+    if (s.type === 'gsheets') {
+      const html = await cachedFetch(s.url, false);
+      return parseChartJson(html, s.product);
+    }
+    return 0;
+  } catch (err) {
+    console.log(`Error fetching ${s.name}:`, err.message);
+    return 0;
   }
-  if (s.type === 'ec2') {
-    const html = await cachedFetch(s.url, false);
-    return parseEC2(html, s.key);
-  }
-  if (s.type === 'gasgroup') {
-    const json = await cachedFetch(s.url, true);
-    return parseGasGroup(json, s.product);
-  }
-  if (s.type === 'gsheets') {
-    const html = await cachedFetch(s.url, false);
-    return parseChartJson(html, s.product);
-  }
-  return 0;
 }
 
 /**
