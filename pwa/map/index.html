@@ -636,6 +636,24 @@
 
     /* ── Events ──────────────────────────── */
 
+    let isLoading = false;
+    let reloadTimer = null;
+
+    function scheduleReload() {
+      if (reloadTimer) return;
+      reloadTimer = setTimeout(() => {
+        reloadTimer = null;
+        if (!isLoading) loadData();
+      }, 300);
+    }
+
+    const _loadData = loadData;
+    loadData = async function () {
+      if (isLoading) return;
+      isLoading = true;
+      try { await _loadData(); } finally { isLoading = false; }
+    };
+
     refreshBtn.addEventListener('click', loadData);
 
     locateBtn.addEventListener('click', async () => {
@@ -650,11 +668,11 @@
     });
 
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') loadData();
+      if (document.visibilityState === 'visible') scheduleReload();
     });
 
     window.addEventListener('pageshow', (e) => {
-      if (e.persisted) loadData();
+      if (e.persisted) scheduleReload();
     });
 
     /* ── Init ────────────────────────────── */

@@ -706,24 +706,36 @@
       }
     }
 
+    let loading = false;
+    let reloadTimer = null;
+
+    function scheduleReload() {
+      if (reloadTimer) return;
+      reloadTimer = setTimeout(() => {
+        reloadTimer = null;
+        if (!loading) loadData();
+      }, 300);
+    }
+
+    const _loadData = loadData;
+    loadData = async function () {
+      if (loading) return;
+      loading = true;
+      try { await _loadData(); } finally { loading = false; }
+    };
+
     refreshBtn.addEventListener('click', loadData);
 
     // Reload data when returning to the app (e.g. after opening Waze)
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        loadData();
-      }
+      if (document.visibilityState === 'visible') scheduleReload();
     });
     // iOS PWA: pageshow fires when app is restored from background
     window.addEventListener('pageshow', (e) => {
-      if (e.persisted) {
-        loadData();
-      }
+      if (e.persisted) scheduleReload();
     });
     // Fallback: focus event
-    window.addEventListener('focus', () => {
-      loadData();
-    });
+    window.addEventListener('focus', scheduleReload);
 
     // Initial load
     loadData();

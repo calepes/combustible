@@ -272,9 +272,10 @@ export async function reportCapacity(entries) {
 /* ── Fetch de estaciones ──────────────── */
 
 /**
- * Cache de respuestas para evitar fetches duplicados (misma URL).
+ * Cache de respuestas para evitar fetches duplicados (misma URL) dentro de un batch.
+ * Se limpia al inicio de cada fetchAllStations para que refresh traiga datos frescos.
  */
-const fetchCache = {};
+let fetchCache = {};
 
 async function cachedFetch(url, isJson) {
   const cacheKey = `${isJson ? 'json' : 'html'}:${url}`;
@@ -288,25 +289,31 @@ async function cachedFetch(url, isJson) {
 
 /**
  * Obtiene litros de una estacion segun su tipo.
+ * Retorna 0 si hay error de red o parsing para no bloquear el resto.
  */
 async function fetchStation(s) {
-  if (s.type === 'genex') {
-    const html = await cachedFetch(s.url, false);
-    return parseGenex(html, s.key, s.fuel);
+  try {
+    if (s.type === 'genex') {
+      const html = await cachedFetch(s.url, false);
+      return parseGenex(html, s.key, s.fuel);
+    }
+    if (s.type === 'ec2') {
+      const html = await cachedFetch(s.url, false);
+      return parseEC2(html, s.key);
+    }
+    if (s.type === 'gasgroup') {
+      const json = await cachedFetch(s.url, true);
+      return parseGasGroup(json, s.product);
+    }
+    if (s.type === 'gsheets') {
+      const html = await cachedFetch(s.url, false);
+      return parseChartJson(html, s.product);
+    }
+    return 0;
+  } catch (e) {
+    console.log(`Error fetching ${s.name}:`, e.message);
+    return 0;
   }
-  if (s.type === 'ec2') {
-    const html = await cachedFetch(s.url, false);
-    return parseEC2(html, s.key);
-  }
-  if (s.type === 'gasgroup') {
-    const json = await cachedFetch(s.url, true);
-    return parseGasGroup(json, s.product);
-  }
-  if (s.type === 'gsheets') {
-    const html = await cachedFetch(s.url, false);
-    return parseChartJson(html, s.product);
-  }
-  return 0;
 }
 
 /**
@@ -316,6 +323,9 @@ async function fetchStation(s) {
  * @returns {Promise<Array<{name, company, lat, lon, litros, capacidad}>>}
  */
 export async function fetchAllStations(stations) {
+  // Limpiar cache para que cada batch traiga datos frescos
+  fetchCache = {};
+
   const results = await Promise.all(
     stations.map(async (s) => ({
       name: s.name,
