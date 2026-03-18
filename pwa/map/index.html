@@ -504,9 +504,11 @@
 
     /* ── Data loading ────────────────────── */
 
+    let firstLoad = true;
+
     async function loadData() {
       refreshBtn.classList.add('spinning');
-      loadingOverlay.classList.remove('hidden');
+      if (firstLoad) loadingOverlay.classList.remove('hidden');
 
       try {
         const [location, stationResults] = await Promise.all([
@@ -628,7 +630,13 @@
         pillEl.style.display = '';
       } catch (err) {
         console.error('Error cargando datos:', err);
+        if (firstLoad) {
+          loadingOverlay.querySelector('.loading-spinner').style.display = 'none';
+          loadingOverlay.childNodes[loadingOverlay.childNodes.length - 1].textContent =
+            ' Error al cargar datos. Toca actualizar.';
+        }
       } finally {
+        firstLoad = false;
         refreshBtn.classList.remove('spinning');
         loadingOverlay.classList.add('hidden');
       }
@@ -686,6 +694,14 @@
       start();
     } else {
       window._pendingLoad = start;
+      // Timeout: si Google Maps no carga en 15s, mostrar error
+      setTimeout(() => {
+        if (!window._mapReady) {
+          loadingOverlay.querySelector('.loading-spinner').style.display = 'none';
+          loadingOverlay.childNodes[loadingOverlay.childNodes.length - 1].textContent =
+            ' Error al cargar Google Maps. Verifica tu conexión.';
+        }
+      }, 15000);
     }
 
     if ('serviceWorker' in navigator) {
