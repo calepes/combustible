@@ -102,14 +102,20 @@ async function handleProxy(url) {
   }
 
   try {
-    const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8',
-        'Accept-Language': 'es-419,es;q=0.9,en;q=0.8',
-      },
-    });
+    const headers = {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8',
+      'Accept-Language': 'es-419,es;q=0.9,en;q=0.8',
+    };
+
+    // Gasgroup API requiere headers AJAX para devolver JSON
+    if (parsed.hostname === 'gasgroup.com.bo' && parsed.pathname.startsWith('/estaciones/')) {
+      headers['Accept'] = 'application/json';
+      headers['X-Requested-With'] = 'XMLHttpRequest';
+    }
+
+    const response = await fetch(targetUrl, { headers });
 
     const body = await response.arrayBuffer();
 

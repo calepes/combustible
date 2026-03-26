@@ -32,7 +32,8 @@ const STATIONS = [
     type: "gasgroup",
     company: "Orsa",
     lat: -17.7533, lon: -63.2213,
-    url: "https://gasgroup.com.bo/api/obtener-datos-temporales/CTqmwWgj",
+    url: "https://gasgroup.com.bo/estaciones/santacruz",
+    codigo: "CTqmwWgj",
     product: "GASOLINA ESPECIAL",
     waze: "https://waze.com/ul?q=Orsa%20Urubo%20Santa%20Cruz%20Bolivia&navigate=yes",
   },
@@ -191,6 +192,10 @@ async function fetchJSON(url) {
   r.headers = {
     "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS like Mac OS X)",
   };
+  if (cleanUrl.includes("gasgroup.com.bo/estaciones/")) {
+    r.headers["Accept"] = "application/json";
+    r.headers["X-Requested-With"] = "XMLHttpRequest";
+  }
   try {
     const json = await r.loadJSON();
     console.log("fetchJSON OK: " + cleanUrl.substring(0, 60) + " → " + JSON.stringify(json).substring(0, 100));
@@ -234,12 +239,14 @@ function parseEC2(html, key) {
 
 const GASGROUP_MIN_LITROS = 1500;
 
-function parseGasGroup(json, product) {
-  if (!json?.data?.tanques) return 0;
+function parseGasGroup(json, product, codigo) {
+  if (!json?.estaciones) return 0;
+  const estacion = json.estaciones.find((e) => e.codigo === codigo);
+  if (!estacion?.tanques) return 0;
   let total = 0;
-  for (const t of json.data.tanques) {
+  for (const t of estacion.tanques) {
     if (t.producto?.toUpperCase().includes(product)) {
-      total += t.volumen || 0;
+      total += t.litros || 0;
     }
   }
   const rounded = Math.round(total);
@@ -311,7 +318,7 @@ async function fetchStation(s) {
   }
   if (s.type === "gasgroup") {
     const json = await getJSON(s.url);
-    return parseGasGroup(json, s.product);
+    return parseGasGroup(json, s.product, s.codigo);
   }
   if (s.type === "gsheets") {
     const html = await getHTML(s.url, false);

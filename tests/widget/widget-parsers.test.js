@@ -31,7 +31,7 @@ function extractWidgetParsers(filePath) {
   if (ec2Match) fnBodies.parseEC2 = ec2Match[0];
 
   // parseGasGroup (necesita GASGROUP_MIN_LITROS)
-  const gasMatch = src.match(/function parseGasGroup\(json, product\)\s*\{[\s\S]*?\n\}/);
+  const gasMatch = src.match(/function parseGasGroup\(json, product, codigo\)\s*\{[\s\S]*?\n\}/);
   if (gasMatch) fnBodies.parseGasGroup = gasMatch[0];
 
   // parseChartJson
@@ -89,18 +89,19 @@ describe('all-stations-widget.js parsers', () => {
   });
 
   describe('parseGasGroup', () => {
-    it('suma volumen y filtra por umbral', () => {
-      const json = { data: { tanques: [
-        { producto: 'GASOLINA ESPECIAL', volumen: 2000 },
-        { producto: 'DIESEL', volumen: 3000 },
-      ]}};
-      expect(fns.parseGasGroup(json, 'GASOLINA ESPECIAL')).toBe(2000);
+    const COD = 'TEST';
+    it('suma litros y filtra por umbral', () => {
+      const json = { estaciones: [{ codigo: COD, tanques: [
+        { producto: 'GASOLINA ESPECIAL', litros: 2000 },
+        { producto: 'DIESEL', litros: 3000 },
+      ]}]};
+      expect(fns.parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(2000);
     });
     it('retorna 0 bajo umbral', () => {
-      const json = { data: { tanques: [
-        { producto: 'GASOLINA ESPECIAL', volumen: 500 },
-      ]}};
-      expect(fns.parseGasGroup(json, 'GASOLINA ESPECIAL')).toBe(0);
+      const json = { estaciones: [{ codigo: COD, tanques: [
+        { producto: 'GASOLINA ESPECIAL', litros: 500 },
+      ]}]};
+      expect(fns.parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(0);
     });
   });
 
@@ -168,12 +169,13 @@ describe('consistencia widget vs PWA', () => {
     const { parseGasGroup: pwaFn } = await import('../../pwa/shared/fetchers.js');
     const widgetFns = extractWidgetParsers('widget/all-stations-widget.js');
 
-    const json = { data: { tanques: [
-      { producto: 'GASOLINA ESPECIAL', volumen: 2000 },
-      { producto: 'GASOLINA ESPECIAL', volumen: 1500 },
-    ]}};
-    expect(widgetFns.parseGasGroup(json, 'GASOLINA ESPECIAL')).toBe(
-      pwaFn(json, 'GASOLINA ESPECIAL')
+    const COD = 'X';
+    const json = { estaciones: [{ codigo: COD, tanques: [
+      { producto: 'GASOLINA ESPECIAL', litros: 2000 },
+      { producto: 'GASOLINA ESPECIAL', litros: 1500 },
+    ]}]};
+    expect(widgetFns.parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(
+      pwaFn(json, 'GASOLINA ESPECIAL', COD)
     );
   });
 });

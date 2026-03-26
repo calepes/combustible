@@ -1,8 +1,8 @@
 /***********************
  * CONFIG
  ***********************/
-const URL =
-  "https://gasgroup.com.bo/api/obtener-datos-temporales/CTqmwWgj";
+const URL = "https://gasgroup.com.bo/estaciones/santacruz";
+const CODIGO = "CTqmwWgj";
 
 const STATION_TITLE = "Urubó";
 const PRODUCT_MATCH = "GASOLINA ESPECIAL";
@@ -15,7 +15,9 @@ try {
   const r = new Request(URL);
   r.timeoutInterval = 15;
   r.headers = {
-    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS like Mac OS X)"
+    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS like Mac OS X)",
+    "Accept": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
   };
   json = await r.loadJSON();
 } catch (_) {
@@ -28,10 +30,11 @@ try {
 const GASGROUP_MIN_LITROS = 1500;
 let litros = 0;
 
-if (json?.data?.tanques) {
-  for (const t of json.data.tanques) {
+const estacion = json?.estaciones?.find((e) => e.codigo === CODIGO);
+if (estacion?.tanques) {
+  for (const t of estacion.tanques) {
     if (t.producto?.toUpperCase().includes(PRODUCT_MATCH)) {
-      litros += t.volumen || 0;
+      litros += t.litros || 0;
     }
   }
 }

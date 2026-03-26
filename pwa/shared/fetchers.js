@@ -82,15 +82,18 @@ export function parseEC2(html, key) {
 }
 
 /**
- * Parsea JSON de Gasgroup API. Suma volumen de tanques que contienen el producto.
+ * Parsea JSON de Gasgroup API (v2: /estaciones/{depto}).
+ * Busca la estacion por codigo, suma litros de tanques que contienen el producto.
  * Retorna 0 si el total esta por debajo del umbral minimo (lecturas poco confiables).
  */
-export function parseGasGroup(json, product) {
-  if (!json?.data?.tanques) return 0;
+export function parseGasGroup(json, product, codigo) {
+  if (!json?.estaciones) return 0;
+  const estacion = json.estaciones.find((e) => e.codigo === codigo);
+  if (!estacion?.tanques) return 0;
   let total = 0;
-  for (const t of json.data.tanques) {
+  for (const t of estacion.tanques) {
     if (t.producto?.toUpperCase().includes(product)) {
-      total += t.volumen || 0;
+      total += t.litros || 0;
     }
   }
   const rounded = Math.round(total);
@@ -306,7 +309,7 @@ async function fetchStation(s) {
     }
     if (s.type === 'gasgroup') {
       const json = await cachedFetch(s.url, true);
-      return parseGasGroup(json, s.product);
+      return parseGasGroup(json, s.product, s.codigo);
     }
     if (s.type === 'gsheets') {
       const html = await cachedFetch(s.url, false);

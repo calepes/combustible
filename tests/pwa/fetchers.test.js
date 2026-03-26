@@ -106,45 +106,55 @@ describe('parseEC2', () => {
 /* ── parseGasGroup ───────────────────── */
 
 describe('parseGasGroup', () => {
-  const makeJson = (tanques) => ({ data: { tanques } });
+  const COD = 'ABC123';
+  const makeJson = (tanques) => ({
+    estaciones: [{ codigo: COD, tanques }],
+  });
 
-  it('suma volumen de tanques con el producto correcto', () => {
+  it('suma litros de tanques con el producto correcto', () => {
     const json = makeJson([
-      { producto: 'GASOLINA ESPECIAL', volumen: 2000 },
-      { producto: 'GASOLINA ESPECIAL', volumen: 1500 },
-      { producto: 'DIESEL', volumen: 3000 },
+      { producto: 'GASOLINA ESPECIAL', litros: 2000 },
+      { producto: 'GASOLINA ESPECIAL', litros: 1500 },
+      { producto: 'DIESEL', litros: 3000 },
     ]);
-    expect(parseGasGroup(json, 'GASOLINA ESPECIAL')).toBe(3500);
+    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(3500);
   });
 
   it('retorna 0 si total esta bajo el umbral (1500)', () => {
     const json = makeJson([
-      { producto: 'GASOLINA ESPECIAL', volumen: 500 },
+      { producto: 'GASOLINA ESPECIAL', litros: 500 },
     ]);
-    expect(parseGasGroup(json, 'GASOLINA ESPECIAL')).toBe(0);
+    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(0);
   });
 
   it('retorna 0 para json null', () => {
-    expect(parseGasGroup(null, 'GASOLINA ESPECIAL')).toBe(0);
+    expect(parseGasGroup(null, 'GASOLINA ESPECIAL', COD)).toBe(0);
   });
 
   it('retorna 0 si no hay tanques', () => {
-    expect(parseGasGroup({ data: {} }, 'GASOLINA ESPECIAL')).toBe(0);
+    expect(parseGasGroup({ estaciones: [{ codigo: COD }] }, 'GASOLINA ESPECIAL', COD)).toBe(0);
+  });
+
+  it('retorna 0 si codigo no coincide', () => {
+    const json = makeJson([
+      { producto: 'GASOLINA ESPECIAL', litros: 5000 },
+    ]);
+    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', 'OTRO')).toBe(0);
   });
 
   it('match es case insensitive via includes', () => {
     const json = makeJson([
-      { producto: 'gasolina especial', volumen: 2000 },
+      { producto: 'gasolina especial', litros: 2000 },
     ]);
-    expect(parseGasGroup(json, 'GASOLINA ESPECIAL')).toBe(2000);
+    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(2000);
   });
 
-  it('maneja volumen undefined como 0', () => {
+  it('maneja litros undefined como 0', () => {
     const json = makeJson([
       { producto: 'GASOLINA ESPECIAL' },
-      { producto: 'GASOLINA ESPECIAL', volumen: 2000 },
+      { producto: 'GASOLINA ESPECIAL', litros: 2000 },
     ]);
-    expect(parseGasGroup(json, 'GASOLINA ESPECIAL')).toBe(2000);
+    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(2000);
   });
 });
 
