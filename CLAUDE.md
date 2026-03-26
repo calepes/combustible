@@ -89,7 +89,7 @@ pwa/
 |------|---------|--------|--------|
 | `genex` | Genex | `parseGenex(html, key, fuel)` | HTML scraping genex.com.bo |
 | `ec2` | Biopetrol | `parseEC2(html, key)` | HTML scraping EC2 instance |
-| `gasgroup` | Orsa | `parseGasGroup(json, product)` | JSON API gasgroup.com.bo |
+| `gasgroup` | Orsa | `parseGasGroup(json, product, codigo)` | JSON API gasgroup.com.bo `/estaciones/{depto}` |
 | `gsheets` | Rivero | `parseChartJson(html, product)` | Google Sheets chart iframe |
 
 ### APIs externas
@@ -118,7 +118,9 @@ pwa/
 ## Gotchas
 
 - **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v16, map: v10, list: v6). `shared/*.js` es network-first, no requiere bump para cambios en stations/fetchers
-- **Gasgroup/Orsa:** umbral mínimo de 1,500 Lts para filtrar lecturas erráticas
+- **Resiliencia fetch:** `fetchStation()` tiene try/catch — una estación con API caída retorna 0 litros sin afectar al resto. `cachedFetch` verifica `resp.ok` antes de parsear
+- **KV namespace:** `wrangler.toml` tiene placeholder `REPLACE_WITH_KV_NAMESPACE_ID` — el endpoint `/capacidad` no funciona hasta configurar el ID real
+- **Gasgroup/Orsa:** API v2 (`/estaciones/{depto}`) requiere headers AJAX (`Accept: application/json`, `X-Requested-With: XMLHttpRequest`). Proxy los inyecta automáticamente. Umbral mínimo de 1,500 Lts para filtrar lecturas erráticas. Cada estación se identifica por `codigo` dentro de la respuesta del departamento
 - **Rivero:** parsing de Google Sheets chartJson — frágil, múltiples fallbacks de deserialización
 - **Coordenadas:** verificadas via Google Places API (2026-03-14). Lucyfer, Parapetí y Montecristo eliminadas (fuera de SCZ o no verificables)
 - **Loaders Scriptable:** son copias locales, no se actualizan desde GitHub automáticamente

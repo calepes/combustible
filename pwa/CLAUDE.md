@@ -36,4 +36,4 @@ Las vistas muestran el **% real** de cada estación (`litros / capacidad`). La c
 - **Google Maps API Key:** hardcoded en `map/index.html` y `cards/index.html`. Restringida a `apps.lepesqueur.net` y `localhost`
 - **Distance Matrix:** client-side via `google.maps.DistanceMatrixService`, batch de 25 destinos por request
 - **Rivero parser:** Google Sheets chartJson es frágil — múltiples fallbacks de deserialización
-- **Gasgroup/Orsa:** umbral mínimo 1,500 Lts en `stations.js` para filtrar lecturas erráticas
+- **Gasgroup/Orsa:** API v2 por departamento, cada estación se identifica por `codigo`. Umbral mínimo 1,500 Lts para filtrar lecturas erráticas

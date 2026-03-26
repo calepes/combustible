@@ -36,3 +36,8 @@ Contexto general del repo en `../CLAUDE.md`.
 1. Push a la rama correspondiente (`main`, `test`, `cards-v2`)
 2. Ejecutar el loader asociado en Scriptable
 3. Verificar layout, datos, modo claro/oscuro y navegación Waze
+
+## Gotchas
+
+- **Gasgroup headers:** widgets que llaman `gasgroup.com.bo/estaciones/*` necesitan `Accept: application/json` y `X-Requested-With: XMLHttpRequest`
+- **Parsers duplicados:** `parseGasGroup`, `parseGenex`, etc. están duplicados entre widgets y `pwa/shared/fetchers.js` — mantener sincronizados

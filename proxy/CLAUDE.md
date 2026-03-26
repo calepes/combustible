@@ -18,8 +18,10 @@ URL: `https://combustible-proxy.carlos-cb4.workers.dev`
 Requiere KV namespace `CAPACIDAD`:
 ```bash
 npx wrangler kv namespace create CAPACIDAD
-# Copiar el ID al wrangler.toml (reemplazar REPLACE_WITH_KV_NAMESPACE_ID)
+# Copiar el ID al wrangler.toml (actualmente tiene placeholder REPLACE_WITH_KV_NAMESPACE_ID)
 ```
+
+> ⚠️ Sin el ID real, el endpoint `/capacidad` retorna 400. Las PWAs manejan esto con fallback a `{}`.
 
 ## Endpoints
 
@@ -42,7 +44,8 @@ Solo permite requests a: `genex.com.bo`, `gasgroup.com.bo`, `compute.amazonaws.c
 
 ## Gotchas
 
+- **Gasgroup headers:** el proxy inyecta `Accept: application/json` y `X-Requested-With: XMLHttpRequest` para requests a `gasgroup.com.bo/estaciones/*` — sin ellos la API devuelve HTML en vez de JSON
 - **Cache:** proxy responde con `Cache-Control: public, max-age=60`, capacidad con `max-age=30`
-- **User-Agent:** usa `CombustibleProxy/1.0`, no el del navegador
+- **User-Agent:** usa Chrome UA hardcoded, no el del navegador del cliente
 - **Agregar dominio:** editar `ALLOWED_DOMAINS` en `worker.js` y redesplegar
 - **KV:** un solo key `capacidad_max` almacena todo el mapa como JSON. Free tier de KV alcanza de sobra
