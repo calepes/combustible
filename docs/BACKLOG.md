@@ -42,6 +42,7 @@ Registro de ideas, bugs y mejoras. Cada ítem tiene estado y prioridad para mape
 
 | Fecha | Ítem | Cambio |
 |-------|------|--------|
+| 2026-05-02 | — | Worker extendido con `/api/stations` (fetcha 4 fuentes directamente, cachea 60s en KV `stations_cache_v1`). KV namespace `CAPACIDAD` creado (ID `67bd8d72166d4f46b046cf0fc3286b93`). MCP `combustible` creado en `mcp-servers/servers/combustible/` — wired en Vesta y Jano. |
 | 2026-03-13 | — | Backlog creado. Migrado desde PENDIENTES.md |
 | 2026-03-13 | — | Journey view, 29 estaciones, icono 3D, deploy en Pages |
 | 2026-03-14 | I1 | Icono PWA bomba 3D implementado (favicon, manifest, apple-touch-icon) |

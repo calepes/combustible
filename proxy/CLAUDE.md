@@ -16,10 +16,7 @@ npx wrangler deploy
 URL: `https://combustible-proxy.carlos-cb4.workers.dev`
 
 Requiere KV namespace `CAPACIDAD`:
-```bash
-npx wrangler kv namespace create CAPACIDAD
-# Copiar el ID al wrangler.toml (actualmente tiene placeholder REPLACE_WITH_KV_NAMESPACE_ID)
-```
+- **ID real (creado 2026-05-02):** `67bd8d72166d4f46b046cf0fc3286b93` — ya en `wrangler.toml`
 
 > ⚠️ Sin el ID real, el endpoint `/capacidad` retorna 400. Las PWAs manejan esto con fallback a `{}`.
 
@@ -35,6 +32,12 @@ GET /?url=<encoded_url>
 GET  /capacidad          → {nombre: litros_max, ...}
 POST /capacidad          → [{name, litros}, ...] → actualiza max, retorna mapa completo
 ```
+
+### Stations API (agregado 2026-05-02)
+```
+GET  /api/stations       → [{name, company, lat, lon, litros, capacidad}]
+```
+Fetcha 4 fuentes directamente (sin CORS proxy), parsea 27 estaciones, cachea 60s en KV `stations_cache_v1`. Para uso desde MCPs/agentes — no requiere navegador. Output incluye `mapsUrl` por estación para navegación directa.
 
 El POST compara cada valor con el máximo almacenado en KV. Solo actualiza si el nuevo valor es mayor. Esto permite que la capacidad se "aprenda" automáticamente con el tiempo.
 
