@@ -108,6 +108,15 @@ pwa/
 - Uso capacidad: `GET /capacidad` (leer mapa) · `POST /capacidad` (reportar litros, actualiza max en KV)
 - Cloudflare KV namespace `CAPACIDAD` almacena el máximo histórico por estación (universal, server-side)
 
+### Monitor de alertas de disponibilidad
+Cron en el worker (`scheduled()`, `* * * * *` con gate `checkIntervalMin`) que detecta "llegó gasolina" y avisa a Cal vía Jano. Spec/plan: `docs/specs/2026-06-17-...` y `docs/plans/2026-06-17-...`.
+- **Lógica:** `evaluateStation()` (función pura, flanco de subida/bajada + recordatorio) → `runMonitor()` evalúa estaciones `enabled`, en el flanco hace POST a Jano.
+- **Endpoints:** `GET/POST /monitor/config` (POST requiere header `X-Monitor-Token`), `GET /monitor/status` (estado en vivo). Config editable por Jano vía MCP `combustible` (tools `getFuelMonitorConfig/Status/setFuelMonitorConfig`).
+- **Entrega vía Jano:** `runMonitor` hace `env.JANO.fetch(...)` (Service Binding `JANO` → `cos-agent-worker`) a `/fuel/alert`. **NO** usar fetch a `*.workers.dev` (worker→worker por hostname público se pierde en el edge CF). El daemon de Jano re-verifica litros y envía el mensaje.
+- **KV keys:** `monitor_config` (config + 27 estaciones), `monitor_state` (estado por estación), `monitor_lastrun` (gate). En el mismo namespace `CAPACIDAD`.
+- **Secrets (no en git):** `FUEL_ALERT_SECRET` (compartido con cos-agent-worker), `MONITOR_TOKEN` (para POST config; también en `~/.combustible-mcp.env` para el MCP).
+- **Límite CF:** 5 cron triggers/cuenta. Se liberó uno de `digest-generator` (16:00 UTC) para este. Si un deploy del worker deja el cron "registrado pero sin disparar", re-registrar el schedule limpio vía API (`PUT [] ` luego `PUT [{cron}]`) lo despierta.
+
 ## Convenciones
 
 - UI y comentarios en español
