@@ -6,7 +6,7 @@ compatibility_date = "2024-01-01"
 crons = ["* * * * *"]
 
 [vars]
-JANO_ALERT_URL = "https://mcp-telegram.carlos-cb4.workers.dev/fuel/alert"
+JANO_ALERT_URL = "https://cos-agent-worker.carlos-cb4.workers.dev/fuel/alert"
 
 [[kv_namespaces]]
 binding = "CAPACIDAD"
