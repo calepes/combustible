@@ -303,6 +303,41 @@ async function handleProxy(url) {
   }
 }
 
+/* ── Monitor: decisión por estación (función pura) ── */
+
+const EMPTY_STATE = { available: false, since: null, lastNotified: null, remindersSent: 0, lastLitros: 0 };
+
+// prev: estado previo o undefined. litros: lectura actual. stationCfg: {name, minLitros?}.
+// globalCfg: {defaultMinLitros, reminderHours, maxReminders}. now: epoch ms.
+// → { action: 'alert'|'reminder'|null, nextState }
+export function evaluateStation(prev, litros, stationCfg, globalCfg, now) {
+  const base = prev ?? EMPTY_STATE;
+  const minLitros = stationCfg.minLitros ?? globalCfg.defaultMinLitros;
+  const available = litros >= minLitros;
+
+  if (!base.available && available) {
+    return {
+      action: 'alert',
+      nextState: { available: true, since: now, lastNotified: now, remindersSent: 0, lastLitros: litros },
+    };
+  }
+  if (base.available && available) {
+    const elapsed = base.lastNotified != null ? now - base.lastNotified : Infinity;
+    const due = elapsed >= globalCfg.reminderHours * 3600e3;
+    if (due && base.remindersSent < globalCfg.maxReminders) {
+      return {
+        action: 'reminder',
+        nextState: { ...base, lastNotified: now, remindersSent: base.remindersSent + 1, lastLitros: litros },
+      };
+    }
+    return { action: null, nextState: { ...base, lastLitros: litros } };
+  }
+  if (base.available && !available) {
+    return { action: null, nextState: { ...EMPTY_STATE, lastLitros: litros } };
+  }
+  return { action: null, nextState: { ...EMPTY_STATE, lastLitros: litros } };
+}
+
 /* ── Router ───────────────────────────── */
 
 export default {
