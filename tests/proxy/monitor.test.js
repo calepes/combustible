@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateStation } from '../../proxy/worker.js';
+import { evaluateStation, runMonitor } from '../../proxy/worker.js';
 import worker from '../../proxy/worker.js';
 
 function mkKV(initial = {}) {
@@ -122,5 +122,46 @@ describe('/monitor/config', () => {
     const resp = await worker.fetch(req('POST', '/monitor/config',
       { stations: [{ name: 'NoExiste', enabled: true }] }, { 'X-Monitor-Token': 'sek' }), env);
     expect(resp.status).toBe(400);
+  });
+});
+
+describe('runMonitor', () => {
+  it('dispara POST a Jano solo para estaciones enabled con flanco de subida', async () => {
+    const cfg = {
+      enabled: true, checkIntervalMin: 5, reminderHours: 3, maxReminders: 2,
+      quietHours: { enabled: false }, defaultMinLitros: 1500, chatId: 1,
+      stations: [
+        { name: 'Urubó', enabled: true, minLitros: 1500 },
+        { name: 'Pirai', enabled: false, minLitros: 1500 },
+      ],
+    };
+    const env = {
+      CAPACIDAD: mkKV({ monitor_config: JSON.stringify(cfg) }),
+      JANO_ALERT_URL: 'https://jano.test/fuel/alert',
+      FUEL_ALERT_SECRET: 'fs',
+    };
+    const posted = [];
+    const stationData = [
+      { name: 'Urubó', company: 'Orsa', litros: 12000, capacidad: 20000 },
+      { name: 'Pirai', company: 'Biopetrol', litros: 9000, capacidad: 20000 },
+    ];
+    const fakeFetch = async (u, opts) => { posted.push({ u, body: JSON.parse(opts.body) }); return { ok: true }; };
+
+    await runMonitor(env, 100000, { fetchStations: async () => stationData, fetchImpl: fakeFetch });
+
+    expect(posted.length).toBe(1);
+    expect(posted[0].u).toBe('https://jano.test/fuel/alert');
+    expect(posted[0].body.events).toHaveLength(1);
+    expect(posted[0].body.events[0].name).toBe('Urubó');
+    expect(posted[0].body.events[0].kind).toBe('alert');
+  });
+
+  it('respeta el gate de checkIntervalMin', async () => {
+    const cfg = { enabled: true, checkIntervalMin: 5, reminderHours: 3, maxReminders: 2,
+      quietHours: { enabled: false }, defaultMinLitros: 1500, stations: [] };
+    const env = { CAPACIDAD: mkKV({ monitor_config: JSON.stringify(cfg), monitor_lastrun: '99000' }) };
+    let called = false;
+    await runMonitor(env, 100000, { fetchStations: async () => { called = true; return []; }, fetchImpl: async () => ({ ok: true }) });
+    expect(called).toBe(false); // 100000-99000 = 1s < 5min
   });
 });

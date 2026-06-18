@@ -427,6 +427,84 @@ export function evaluateStation(prev, litros, stationCfg, globalCfg, now) {
   return { action: null, nextState: { ...EMPTY_STATE, lastLitros: litros } };
 }
 
+/* ── Monitor: motor principal ─────────────────────── */
+
+function buildAlertEvent(stationMeta, dataRow, action, nextState) {
+  return {
+    name: stationMeta.name,
+    company: dataRow.company || '',
+    litros: dataRow.litros || 0,
+    lat: stationMeta.lat,
+    lon: stationMeta.lon,
+    waze: stationMeta.waze || null,
+    kind: action, // 'alert' | 'reminder'
+    since: nextState.since,
+  };
+}
+
+// deps inyectables para test: { fetchStations, fetchImpl }
+export async function runMonitor(env, now, deps = {}) {
+  const fetchStations = deps.fetchStations || (() => fetchAllStationsData(env));
+  const fetchImpl = deps.fetchImpl || fetch;
+
+  const cfg = await getConfig(env);
+  if (!cfg.enabled) return;
+
+  // Gate checkIntervalMin (solo aplica si hay un lastRun previo)
+  const lastRunRaw = await env.CAPACIDAD.get(MONITOR_LASTRUN_KEY);
+  if (lastRunRaw) {
+    const lastRun = Number(lastRunRaw);
+    if (now - lastRun < cfg.checkIntervalMin * 60_000) return;
+  }
+  await env.CAPACIDAD.put(MONITOR_LASTRUN_KEY, String(now));
+
+  const data = await fetchStations();
+  const byName = Object.fromEntries(data.map((d) => [d.name, d]));
+  const metaByName = Object.fromEntries(STATIONS.map((s) => [s.name, s]));
+
+  const stateRaw = await env.CAPACIDAD.get(MONITOR_STATE_KEY);
+  const state = stateRaw ? JSON.parse(stateRaw) : {};
+
+  // Quiet hours (hora local SCZ = UTC-4)
+  let quiet = false;
+  if (cfg.quietHours?.enabled) {
+    const h = (new Date(now).getUTCHours() + 24 - 4) % 24;
+    const { start, end } = cfg.quietHours;
+    quiet = start <= end ? (h >= start && h < end) : (h >= start || h < end);
+  }
+
+  const events = [];
+  for (const sc of cfg.stations) {
+    if (!sc.enabled) continue;
+    const row = byName[sc.name];
+    if (!row) continue;
+    const { action, nextState } = evaluateStation(state[sc.name], row.litros || 0, sc, cfg, now);
+    state[sc.name] = nextState;
+    if (action && !quiet) events.push(buildAlertEvent(metaByName[sc.name] || sc, row, action, nextState));
+  }
+
+  let delivered = true;
+  if (events.length && env.JANO_ALERT_URL) {
+    try {
+      const resp = await fetchImpl(env.JANO_ALERT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Fuel-Secret': env.FUEL_ALERT_SECRET || '' },
+        body: JSON.stringify({ events }),
+      });
+      delivered = resp.ok;
+    } catch { delivered = false; }
+  }
+
+  // Si la entrega falló, revertir lastNotified de los eventos para reintentar el próximo tick
+  if (!delivered) {
+    for (const ev of events) {
+      const prev = state[ev.name];
+      if (prev) { prev.lastNotified = null; if (ev.kind === 'alert') prev.available = false; }
+    }
+  }
+  await env.CAPACIDAD.put(MONITOR_STATE_KEY, JSON.stringify(state));
+}
+
 /* ── Router ───────────────────────────── */
 
 export default {
@@ -463,5 +541,8 @@ export default {
     }
 
     return handleProxy(url);
+  },
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runMonitor(env, Date.now()));
   },
 };
