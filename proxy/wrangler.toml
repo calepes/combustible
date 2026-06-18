@@ -8,6 +8,11 @@ crons = ["* * * * *"]
 [vars]
 JANO_ALERT_URL = "https://cos-agent-worker.carlos-cb4.workers.dev/fuel/alert"
 
+# Service binding worker→worker (fetch directo por *.workers.dev se pierde en el edge CF)
+[[services]]
+binding = "JANO"
+service = "cos-agent-worker"
+
 [[kv_namespaces]]
 binding = "CAPACIDAD"
 id = "67bd8d72166d4f46b046cf0fc3286b93"

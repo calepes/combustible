@@ -445,7 +445,9 @@ function buildAlertEvent(stationMeta, dataRow, action, nextState) {
 // deps inyectables para test: { fetchStations, fetchImpl }
 export async function runMonitor(env, now, deps = {}) {
   const fetchStations = deps.fetchStations || (() => fetchAllStationsData(env));
-  const fetchImpl = deps.fetchImpl || fetch;
+  // Service Binding env.JANO → cos-agent-worker. El fetch worker→worker por *.workers.dev
+  // se pierde en el edge de CF; el service binding rutea internamente. Fallback a fetch global.
+  const fetchImpl = deps.fetchImpl || (env.JANO ? (u, o) => env.JANO.fetch(u, o) : fetch);
 
   const cfg = await getConfig(env);
   if (!cfg.enabled) return;
