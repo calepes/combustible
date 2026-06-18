@@ -75,7 +75,7 @@ async function handleCapacidadPost(request, env) {
 const STATIONS = [
   // Genex (comparten HTML, una sola fetch)
   { name: 'Genex Banzer', type: 'genex', company: 'Genex', lat: -17.7577, lon: -63.1779, url: 'https://genex.com.bo/estaciones/', key: 'GENEX I', fuel: 'G. ESPECIAL+' },
-  { name: 'Vangas', type: 'genex', company: 'Genex', lat: -17.7772, lon: -63.2158, url: 'https://genex.com.bo/estaciones/', key: 'VANGAS', fuel: 'G. ESPECIAL+' },
+  { name: 'Vangas', type: 'genex', company: 'Genex', lat: -17.7772, lon: -63.2158, url: 'https://genex.com.bo/estaciones/', key: 'VANGAS', fuel: 'G. ESPECIAL+', waze: 'https://waze.com/ul?q=Vangas%20Hernando%20Sanabria%204to%20Anillo%20Santa%20Cruz%20Bolivia&navigate=yes' },
   { name: 'Genex Guaracachi', type: 'genex', company: 'Genex', lat: -17.7772, lon: -63.1399, url: 'https://genex.com.bo/estaciones/', key: 'GENEX GUARACACHI', fuel: 'G. ESPECIAL+' },
   { name: 'Genex Trompillo', type: 'genex', company: 'Genex', lat: -17.8072, lon: -63.1708, url: 'https://genex.com.bo/estaciones/', key: 'GENEX TROMPILLO', fuel: 'G. ESPECIAL+' },
   { name: 'Genex III', type: 'genex', company: 'Genex', lat: -17.7752, lon: -63.1653, url: 'https://genex.com.bo/estaciones/', key: 'GENEX III', fuel: 'G. ESPECIAL+' },
@@ -86,7 +86,7 @@ const STATIONS = [
   { name: 'Jarajorechi', type: 'genex', company: 'Genex', lat: -17.3194, lon: -63.2691, url: 'https://genex.com.bo/estaciones/', key: 'JARAJORECHI', fuel: 'G. ESPECIAL+' },
   { name: 'Aracataca', type: 'genex', company: 'Genex', lat: -17.3286, lon: -63.2632, url: 'https://genex.com.bo/estaciones/', key: 'ARACATACA', fuel: 'G. ESPECIAL+' },
   // Biopetrol EC2 (comparten HTML, una sola fetch)
-  { name: 'Equipetrol', type: 'ec2', company: 'Biopetrol', lat: -17.7545, lon: -63.1970, url: 'http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134', key: 'EQUIPETROL' },
+  { name: 'Equipetrol', type: 'ec2', company: 'Biopetrol', lat: -17.7545, lon: -63.1970, url: 'http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134', key: 'EQUIPETROL', waze: 'https://waze.com/ul?q=Biopetrol%20Equipetrol%204to%20Anillo%20Santa%20Cruz%20Bolivia&navigate=yes' },
   { name: 'Pirai', type: 'ec2', company: 'Biopetrol', lat: -17.7860, lon: -63.2045, url: 'http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134', key: 'PIRAI' },
   { name: 'Alemana', type: 'ec2', company: 'Biopetrol', lat: -17.7691, lon: -63.1710, url: 'http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134', key: 'Alemana' },
   { name: 'López', type: 'ec2', company: 'Biopetrol', lat: -17.7257, lon: -63.1654, url: 'http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134', key: 'Lopez' },
@@ -100,7 +100,7 @@ const STATIONS = [
   { name: 'Paraguá', type: 'ec2', company: 'Biopetrol', lat: -17.7651, lon: -63.1495, url: 'http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134', key: 'PARAGUA' },
   { name: 'Sur Central', type: 'ec2', company: 'Biopetrol', lat: -17.7999, lon: -63.1805, url: 'http://ec2-3-22-240-207.us-east-2.compute.amazonaws.com/guiasaldos/main/donde/134', key: 'SUR CENTRAL' },
   // Gasgroup (una fetch para ambas)
-  { name: 'Urubó', type: 'gasgroup', company: 'Orsa', lat: -17.7535, lon: -63.2213, url: 'https://gasgroup.com.bo/estaciones/santacruz', codigo: 'CTqmwWgj', product: 'GASOLINA ESPECIAL' },
+  { name: 'Urubó', type: 'gasgroup', company: 'Orsa', lat: -17.7535, lon: -63.2213, url: 'https://gasgroup.com.bo/estaciones/santacruz', codigo: 'CTqmwWgj', product: 'GASOLINA ESPECIAL', waze: 'https://waze.com/ul?q=Orsa%20Urubo%20Santa%20Cruz%20Bolivia&navigate=yes' },
   { name: 'Orsa Alemana', type: 'gasgroup', company: 'Orsa', lat: -17.7524, lon: -63.1634, url: 'https://gasgroup.com.bo/estaciones/santacruz', codigo: '39gbIJkJ', product: 'GASOLINA ESPECIAL' },
   // Rivero (Google Sheets)
   { name: 'Rivero', type: 'gsheets', company: 'Rivero', lat: -17.7625, lon: -63.1805, url: 'https://docs.google.com/spreadsheets/u/0/d/e/2CAIWO3els60V5S1vVAh0cccQxdcZ1MYZhD9A1pQ-ojCNPoNh-vJjHhJaUalVsDLQivYf_Z23Un8mEaePxSg/gviz/chartiframe?oid=1546358769&resourcekey', product: 'ESPECIAL' },
@@ -303,6 +303,95 @@ async function handleProxy(url) {
   }
 }
 
+/* ── Monitor: config en KV ───────────────────────── */
+
+const MONITOR_CONFIG_KEY = 'monitor_config';
+const MONITOR_STATE_KEY = 'monitor_state';
+const MONITOR_LASTRUN_KEY = 'monitor_lastrun';
+const DEFAULT_ENABLED = ['Urubó', 'Equipetrol', 'Vangas'];
+
+function seedConfig() {
+  return {
+    enabled: true,
+    checkIntervalMin: 5,
+    reminderHours: 3,
+    maxReminders: 2,
+    quietHours: { enabled: false, start: 22, end: 6 },
+    chatId: 94137698,
+    defaultMinLitros: 1500,
+    stations: STATIONS.map((s) => ({
+      name: s.name,
+      enabled: DEFAULT_ENABLED.includes(s.name),
+      minLitros: 1500,
+    })),
+  };
+}
+
+async function getConfig(env) {
+  const raw = await env.CAPACIDAD.get(MONITOR_CONFIG_KEY);
+  if (raw) return JSON.parse(raw);
+  const seeded = seedConfig();
+  await env.CAPACIDAD.put(MONITOR_CONFIG_KEY, JSON.stringify(seeded));
+  return seeded;
+}
+
+async function handleMonitorConfigGet(env) {
+  const cfg = await getConfig(env);
+  return new Response(JSON.stringify(cfg), { headers: JSON_HEADERS });
+}
+
+async function handleMonitorConfigPost(request, env) {
+  const token = request.headers.get('X-Monitor-Token');
+  if (!env.MONITOR_TOKEN || token !== env.MONITOR_TOKEN) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: JSON_HEADERS });
+  }
+  let patch;
+  try { patch = await request.json(); } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers: JSON_HEADERS });
+  }
+  const cfg = await getConfig(env);
+  const validNames = new Set(STATIONS.map((s) => s.name));
+
+  if (patch.stations) {
+    for (const ps of patch.stations) {
+      if (!validNames.has(ps.name)) {
+        return new Response(JSON.stringify({ error: 'Unknown station', name: ps.name }), { status: 400, headers: JSON_HEADERS });
+      }
+      const cur = cfg.stations.find((s) => s.name === ps.name);
+      if (!cur) continue; // config en KV obsoleta sin esta estación
+      if (ps.enabled !== undefined) cur.enabled = ps.enabled;
+      if (ps.minLitros !== undefined) cur.minLitros = ps.minLitros;
+    }
+  }
+  for (const k of ['enabled', 'checkIntervalMin', 'reminderHours', 'maxReminders', 'quietHours', 'chatId', 'defaultMinLitros']) {
+    if (patch[k] !== undefined) cfg[k] = patch[k];
+  }
+  await env.CAPACIDAD.put(MONITOR_CONFIG_KEY, JSON.stringify(cfg));
+  return new Response(JSON.stringify(cfg), { headers: JSON_HEADERS });
+}
+
+async function handleMonitorStatus(env) {
+  const cfg = await getConfig(env);
+  const data = await fetchAllStationsData(env); // [{name, company, litros, capacidad, ...}]
+  const stateRaw = await env.CAPACIDAD.get(MONITOR_STATE_KEY);
+  const state = stateRaw ? JSON.parse(stateRaw) : {};
+  const byName = Object.fromEntries(data.map((d) => [d.name, d]));
+  const stations = cfg.stations.map((s) => {
+    const d = byName[s.name] || {};
+    const minLitros = s.minLitros ?? cfg.defaultMinLitros;
+    return {
+      name: s.name,
+      company: d.company || '',
+      enabled: s.enabled,
+      minLitros,
+      litros: d.litros || 0,
+      available: (d.litros || 0) >= minLitros,
+      since: state[s.name]?.since ?? null,
+    };
+  });
+  return new Response(JSON.stringify({ stations }), { headers: JSON_HEADERS });
+}
+
 /* ── Monitor: decisión por estación (función pura) ── */
 
 const EMPTY_STATE = { available: false, since: null, lastNotified: null, remindersSent: 0, lastLitros: 0 };
@@ -361,6 +450,16 @@ export default {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405, headers: JSON_HEADERS,
       });
+    }
+
+    if (url.pathname === '/monitor/config') {
+      if (request.method === 'GET') return handleMonitorConfigGet(env);
+      if (request.method === 'POST') return handleMonitorConfigPost(request, env);
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: JSON_HEADERS });
+    }
+    if (url.pathname === '/monitor/status') {
+      if (request.method === 'GET') return handleMonitorStatus(env);
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: JSON_HEADERS });
     }
 
     return handleProxy(url);

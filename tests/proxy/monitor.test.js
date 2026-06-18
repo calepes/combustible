@@ -1,5 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateStation } from '../../proxy/worker.js';
+import worker from '../../proxy/worker.js';
+
+function mkKV(initial = {}) {
+  const store = { ...initial };
+  return {
+    async get(k, opts) { const v = store[k] ?? null; return opts?.type === 'json' && v ? JSON.parse(v) : v; },
+    async put(k, v) { store[k] = v; },
+    _store: store,
+  };
+}
+function req(method, path, body, headers = {}) {
+  const opts = { method, headers: { ...headers } };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  return new Request(`https://x.test${path}`, opts);
+}
 
 const cfg = { defaultMinLitros: 1500, reminderHours: 3, maxReminders: 2 };
 const st = { name: 'Urubó', minLitros: 1500 };
@@ -60,5 +75,52 @@ describe('evaluateStation', () => {
   it('minLitros por estación pisa al default', () => {
     const r = evaluateStation(undefined, 2000, { name: 'X', minLitros: 5000 }, cfg, 1000);
     expect(r.action).toBe(null);
+  });
+});
+
+describe('/monitor/config', () => {
+  it('GET siembra defaults: 27 estaciones, 3 enabled', async () => {
+    const env = { CAPACIDAD: mkKV(), MONITOR_TOKEN: 'sek' };
+    const resp = await worker.fetch(req('GET', '/monitor/config'), env);
+    const cfg = await resp.json();
+    expect(resp.status).toBe(200);
+    expect(cfg.stations.length).toBe(27);
+    expect(cfg.stations.filter(s => s.enabled).map(s => s.name).sort())
+      .toEqual(['Equipetrol', 'Urubó', 'Vangas']);
+    expect(cfg.checkIntervalMin).toBe(5);
+  });
+
+  it('POST sin token → 403', async () => {
+    const env = { CAPACIDAD: mkKV(), MONITOR_TOKEN: 'sek' };
+    const resp = await worker.fetch(req('POST', '/monitor/config', { reminderHours: 4 }), env);
+    expect(resp.status).toBe(403);
+  });
+
+  it('POST con token hace merge parcial top-level', async () => {
+    const env = { CAPACIDAD: mkKV(), MONITOR_TOKEN: 'sek' };
+    await worker.fetch(req('GET', '/monitor/config'), env); // siembra
+    const resp = await worker.fetch(req('POST', '/monitor/config', { reminderHours: 4 }, { 'X-Monitor-Token': 'sek' }), env);
+    const cfg = await resp.json();
+    expect(resp.status).toBe(200);
+    expect(cfg.reminderHours).toBe(4);
+    expect(cfg.stations.length).toBe(27);
+  });
+
+  it('POST merge por estación (enabled/minLitros)', async () => {
+    const env = { CAPACIDAD: mkKV(), MONITOR_TOKEN: 'sek' };
+    await worker.fetch(req('GET', '/monitor/config'), env);
+    const resp = await worker.fetch(req('POST', '/monitor/config',
+      { stations: [{ name: 'Pirai', enabled: true }] }, { 'X-Monitor-Token': 'sek' }), env);
+    const cfg = await resp.json();
+    expect(cfg.stations.find(s => s.name === 'Pirai').enabled).toBe(true);
+    expect(cfg.stations.find(s => s.name === 'Urubó').enabled).toBe(true); // intacto
+  });
+
+  it('POST estación desconocida → 400', async () => {
+    const env = { CAPACIDAD: mkKV(), MONITOR_TOKEN: 'sek' };
+    await worker.fetch(req('GET', '/monitor/config'), env);
+    const resp = await worker.fetch(req('POST', '/monitor/config',
+      { stations: [{ name: 'NoExiste', enabled: true }] }, { 'X-Monitor-Token': 'sek' }), env);
+    expect(resp.status).toBe(400);
   });
 });
