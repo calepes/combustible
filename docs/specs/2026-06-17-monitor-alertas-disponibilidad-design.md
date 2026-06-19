@@ -1,7 +1,9 @@
 # Monitor de alertas de disponibilidad de gasolina — Diseño
 
+> ⛔ **APAGADO 2026-06-19.** Implementado y desplegado, pero apagado porque el cron `* * * * *` quemaba ~576 writes/día de KV (~57% del free tier) → alerta CF "50% daily KV limit". Off vía `crons = []` + `enabled:false` en KV. Reactivar con cron `*/5` y `put monitor_state` condicional (detalle en `CLAUDE.md` raíz del repo).
+
 **Fecha:** 2026-06-17
-**Estado:** Aprobado (pendiente implementación)
+**Estado:** Implementado y desplegado → APAGADO 2026-06-19 (ver banner arriba)
 **Autor:** Cal + Jano
 
 ## Problema

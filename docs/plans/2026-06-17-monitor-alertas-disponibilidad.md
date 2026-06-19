@@ -1,5 +1,7 @@
 # Monitor de alertas de disponibilidad de gasolina — Implementation Plan
 
+> ⛔ **APAGADO 2026-06-19.** Plan implementado y desplegado, pero el monitor se apagó: el cron `* * * * *` quemaba ~576 writes/día de KV (~57% del free tier) → alerta CF "50% daily KV limit". Off vía `crons = []` en `proxy/wrangler.toml` + `enabled:false` en KV `monitor_config`. Reactivar con cron `*/5` (no cada minuto) y `put monitor_state` condicional. Detalle: `CLAUDE.md` raíz.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Monitorear cada 5 min las estaciones configuradas y, cuando llega gasolina, avisar a Cal vía Jano (que ofrece menú y permite ajustar config), con parámetros editables por Jano.
