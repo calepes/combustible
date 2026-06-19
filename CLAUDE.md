@@ -109,6 +109,8 @@ pwa/
 - Cloudflare KV namespace `CAPACIDAD` almacena el máximo histórico por estación (universal, server-side)
 
 ### Monitor de alertas de disponibilidad
+> ⛔ **APAGADO 2026-06-19.** El cron `* * * * *` escribía `monitor_lastrun` + `monitor_state` cada 5 min (~576 writes/día de KV ≈ 57% del free tier) → Cloudflare disparó alerta "50% daily KV limit". Apagado por dos vías: `crons = []` en `wrangler.toml` + `enabled:false` en la key `monitor_config` de KV. **Para reactivar:** restaurar `crons = ["*/5 * * * *"]` (5 min, NO cada minuto), setear `enabled:true` en `monitor_config`, redeploy. Ideal antes de reactivar: hacer el `put monitor_state` condicional (solo si cambió) para no volver a quemar writes. Lo demás (endpoints HTTP, `/capacidad`, `/api/stations`, `/monitor/*`) sigue vivo.
+
 Cron en el worker (`scheduled()`, `* * * * *` con gate `checkIntervalMin`) que detecta "llegó gasolina" y avisa a Cal vía Jano. Spec/plan: `docs/specs/2026-06-17-...` y `docs/plans/2026-06-17-...`.
 - **Lógica:** `evaluateStation()` (función pura, flanco de subida/bajada + recordatorio) → `runMonitor()` evalúa estaciones `enabled`, en el flanco hace POST a Jano.
 - **Endpoints:** `GET/POST /monitor/config` (POST requiere header `X-Monitor-Token`), `GET /monitor/status` (estado en vivo). Config editable por Jano vía MCP `combustible` (tools `getFuelMonitorConfig/Status/setFuelMonitorConfig`).

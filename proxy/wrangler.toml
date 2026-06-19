@@ -3,7 +3,11 @@ main = "worker.js"
 compatibility_date = "2024-01-01"
 
 [triggers]
-crons = ["* * * * *"]
+# Monitor de gasolina APAGADO 2026-06-19 — el cron cada minuto quemaba ~576 writes/día
+# de KV (monitor_lastrun + monitor_state) ≈ 57% del free tier → alerta CF "50% KV limit".
+# Para reactivar: restaurar crons = ["*/5 * * * *"] (5 min, no cada minuto) + redeploy,
+# y setear enabled:true en la key monitor_config de KV (CAPACIDAD).
+crons = []
 
 [vars]
 JANO_ALERT_URL = "https://cos-agent-worker.carlos-cb4.workers.dev/fuel/alert"
