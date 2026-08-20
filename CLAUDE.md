@@ -128,7 +128,7 @@ Cron en el worker (`scheduled()`, `* * * * *` con gate `checkIntervalMin`) que d
 
 ## Gotchas
 
-- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v16, map: v10, list: v6). `shared/*.js` es network-first, no requiere bump para cambios en stations/fetchers
+- **SW cache:** cada cambio en PWA requiere bump de `CACHE_NAME` en el `sw.js` correspondiente (cards: v16, map: v11, list: v6). `shared/*.js` es network-first, no requiere bump para cambios en stations/fetchers
 - **Resiliencia fetch:** `fetchStation()` tiene try/catch — una estación con API caída retorna 0 litros sin afectar al resto. `cachedFetch` verifica `resp.ok` antes de parsear
 - **KV namespace:** `wrangler.toml` tiene placeholder `REPLACE_WITH_KV_NAMESPACE_ID` — el endpoint `/capacidad` no funciona hasta configurar el ID real
 - **Gasgroup/Orsa:** API v2 (`/estaciones/{depto}`) requiere headers AJAX (`Accept: application/json`, `X-Requested-With: XMLHttpRequest`). Proxy los inyecta automáticamente. Umbral mínimo de 1,500 Lts para filtrar lecturas erráticas. Cada estación se identifica por `codigo` dentro de la respuesta del departamento

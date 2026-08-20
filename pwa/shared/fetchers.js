@@ -282,13 +282,19 @@ const fetchCache = {};
 async function cachedFetch(url, isJson) {
   const cacheKey = `${isJson ? 'json' : 'html'}:${url}`;
   if (!fetchCache[cacheKey]) {
-    fetchCache[cacheKey] = proxyFetch(url).then((resp) => {
-      if (!resp.ok) {
-        console.log(`Proxy ${resp.status} para ${url}`);
-        return isJson ? null : '';
-      }
-      return isJson ? resp.json() : resp.text();
-    });
+    fetchCache[cacheKey] = proxyFetch(url)
+      .then((resp) => {
+        if (!resp.ok) {
+          console.log(`Proxy ${resp.status} para ${url}`);
+          delete fetchCache[cacheKey];
+          return isJson ? null : '';
+        }
+        return isJson ? resp.json() : resp.text();
+      })
+      .catch((err) => {
+        delete fetchCache[cacheKey];
+        throw err;
+      });
   }
   return fetchCache[cacheKey];
 }
