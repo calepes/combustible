@@ -430,7 +430,7 @@
         : '';
 
       const distHtml = distKm != null
-        ? `<span class="iw-dist">${formatDistance(distKm)}</span>`
+        ? `<span class="iw-dist">${formatDistance(distKm)}${station.distanceEstimated ? ' (estimada)' : ''}</span>`
         : '';
 
       const ctaHtml = navUrl

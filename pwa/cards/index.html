@@ -516,6 +516,7 @@
       journey.appendChild(origin);
 
       let prevDistKm = 0; // track previous station distance for incremental badge
+      let prevDistanceEstimated = false;
 
       for (const r of stations) {
         const available = r.litros > 0;
@@ -531,10 +532,12 @@
           sep.className = 'distance-sep';
           const badge = document.createElement('span');
           badge.className = 'distance-badge';
-          badge.textContent = `+ ${formatDistance(delta)}`;
+          const estimated = r.distanceEstimated || prevDistanceEstimated;
+          badge.textContent = `+ ${formatDistance(delta)}${estimated ? ' (estimada)' : ''}`;
           sep.appendChild(badge);
           journey.appendChild(sep);
           prevDistKm = r.distKm;
+          prevDistanceEstimated = r.distanceEstimated;
         }
 
         // Station node
@@ -631,7 +634,7 @@
         if (r.distKm != null) {
           const dist = document.createElement('span');
           dist.className = 'card-dist';
-          dist.textContent = formatDistance(r.distKm);
+          dist.textContent = formatDistance(r.distKm) + (r.distanceEstimated ? ' (estimada)' : '');
           bottom.appendChild(dist);
         }
 

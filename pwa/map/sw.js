@@ -1,4 +1,4 @@
-const CACHE_NAME = 'combustible-map-v11';
+const CACHE_NAME = 'combustible-map-v12';
 
 const APP_SHELL = [
   './',

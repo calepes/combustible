@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   normalizeLiters,
   parseGenex,
@@ -6,6 +6,8 @@ import {
   parseGasGroup,
   parseChartJson,
   haversineKm,
+  getDistances,
+  osrmDistances,
 } from '../../pwa/shared/fetchers.js';
 
 /* ── normalizeLiters ─────────────────── */
@@ -262,5 +264,27 @@ describe('stations config', () => {
   it('GASGROUP_MIN_LITROS es 1500', async () => {
     const { GASGROUP_MIN_LITROS } = await import('../../pwa/shared/stations.js');
     expect(GASGROUP_MIN_LITROS).toBe(1500);
+  });
+});
+
+
+describe('distancias con OSRM', () => {
+  it('estima una ruta ausente y conserva una ruta de cero metros', async () => {
+    vi.stubGlobal('google', undefined);
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      json: async () => ({ code: 'Ok', distances: [[0, null, 0, 2000]] }),
+    })));
+    const stations = [{ lat: 0, lon: 0.01 }, { lat: 0, lon: 0 }, { lat: 0, lon: 0.02 }];
+    try {
+      expect(await osrmDistances(0, 0, stations)).toEqual([null, 0, 2]);
+      const distances = await getDistances(0, 0, stations);
+      expect(distances[0].distKm).toBeCloseTo(1.112, 3);
+      expect(distances[0].distanceEstimated).toBe(true);
+      expect(distances.slice(1).map(({ distKm, distanceEstimated }) => (
+        [distKm, distanceEstimated]
+      ))).toEqual([[0, false], [2, false]]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

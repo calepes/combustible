@@ -206,11 +206,11 @@ export function haversineKm(lat1, lon1, lat2, lon2) {
 
 /**
  * Distancia real por ruta (driving) via OSRM, a traves del proxy.
- * Retorna array de distancias en km desde el origen a cada estacion, o null si falla.
+ * Retorna distancias en km, con null para cada ruta ausente o si falla toda la consulta.
  * @param {number} originLat
  * @param {number} originLon
  * @param {{lat: number, lon: number}[]} stations
- * @returns {Promise<number[]|null>}
+ * @returns {Promise<Array<number|null>|null>}
  */
 export async function osrmDistances(originLat, originLon, stations) {
   try {
@@ -225,7 +225,7 @@ export async function osrmDistances(originLat, originLon, stations) {
     if (json && json.code === 'Ok' && json.distances && json.distances[0]) {
       // distances[0] = distancias desde origen a cada destino (en metros)
       // El primer valor es origen->origen (0), los demas son las estaciones
-      return json.distances[0].slice(1).map((m) => m / 1000);
+      return json.distances[0].slice(1).map((m) => Number.isFinite(m) ? m / 1000 : null);
     }
     console.log('OSRM respuesta inesperada:', JSON.stringify(json).substring(0, 200));
     return null;
@@ -377,10 +377,12 @@ export async function getDistances(userLat, userLon, results) {
     routeDistances = await osrmDistances(userLat, userLon, results);
   }
 
-  return results.map((r, i) => ({
-    ...r,
-    distKm: routeDistances?.[i] != null
-      ? routeDistances[i]
-      : haversineKm(userLat, userLon, r.lat, r.lon),
-  }));
+  return results.map((r, i) => {
+    const routeDistance = routeDistances?.[i];
+    return {
+      ...r,
+      distKm: routeDistance ?? haversineKm(userLat, userLon, r.lat, r.lon),
+      distanceEstimated: routeDistance == null,
+    };
+  });
 }
