@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { readSource } from '../../proxy/readings.js';
 
 /**
  * Los widgets de Scriptable no exportan funciones (no son ES modules).
- * Estos tests verifican que los parsers duplicados en los widgets
- * son identicos a los de pwa/shared/fetchers.js (fuente de verdad).
- *
- * Tambien ejecutamos los parsers del widget directamente evaluandolos.
+ * Se ejecutan los parsers actuales de los widgets y se comprueba
+ * su paridad con el Worker para lecturas válidas.
  */
 
 /* ── Extraer funciones del widget via eval ── */
@@ -142,40 +141,33 @@ describe('cards-widget.js parsers', () => {
   });
 });
 
-/* ── Verificar consistencia con PWA ── */
+describe('consistencia widget vs Worker para lecturas válidas', () => {
+  const genex = [{ name: 'Genex Banzer', type: 'genex', key: 'GENEX I', fuel: 'G. ESPECIAL+' }];
+  const html = (litros) => '<span class="station_name">GENEX I</span>'
+    + '<span class="product_name">G. ESPECIAL+</span>'
+    + `<span class="product_volume">${litros} litros</span>`;
 
-describe('consistencia widget vs PWA', () => {
-  it('normalizeLiters produce mismos resultados', async () => {
-    const { normalizeLiters: pwaNorm } = await import('../../pwa/shared/fetchers.js');
-    const widgetFns = extractWidgetParsers('widget/all-stations-widget.js');
-
-    const cases = ['1.234', '1,234', '5000', '', null, 'abc', '12.345.678'];
-    for (const c of cases) {
-      expect(widgetFns.normalizeLiters(c)).toBe(pwaNorm(c));
+  it('coincide para los formatos de volumen admitidos', () => {
+    const widget = extractWidgetParsers('widget/all-stations-widget.js');
+    for (const value of ['0', '1.234', '1,234', '5000', '12.345.678']) {
+      expect(widget.normalizeLiters(value)).toBe(readSource(genex, html(value))[0][1]);
     }
   });
 
-  it('parseGenex produce mismos resultados', async () => {
-    const { parseGenex: pwaFn } = await import('../../pwa/shared/fetchers.js');
-    const widgetFns = extractWidgetParsers('widget/all-stations-widget.js');
-
-    const html = '<div>GENEX I</div><span>G. ESPECIAL+</span><b>3.500 litros</b>';
-    expect(widgetFns.parseGenex(html, 'GENEX I', 'G. ESPECIAL+')).toBe(
-      pwaFn(html, 'GENEX I', 'G. ESPECIAL+')
-    );
+  it('coincide para una lectura de Genex', () => {
+    const widget = extractWidgetParsers('widget/all-stations-widget.js');
+    expect(widget.parseGenex(html('3.500'), 'GENEX I', 'G. ESPECIAL+')).toBe(readSource(genex, html('3.500'))[0][1]);
   });
 
-  it('parseGasGroup produce mismos resultados', async () => {
-    const { parseGasGroup: pwaFn } = await import('../../pwa/shared/fetchers.js');
-    const widgetFns = extractWidgetParsers('widget/all-stations-widget.js');
-
-    const COD = 'X';
-    const json = { estaciones: [{ codigo: COD, tanques: [
-      { producto: 'GASOLINA ESPECIAL', litros: 2000 },
-      { producto: 'GASOLINA ESPECIAL', litros: 1500 },
-    ]}]};
-    expect(widgetFns.parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(
-      pwaFn(json, 'GASOLINA ESPECIAL', COD)
-    );
+  it('coincide para una lectura por encima del umbral de Gasgroup', () => {
+    const widget = extractWidgetParsers('widget/all-stations-widget.js');
+    const product = 'GASOLINA ESPECIAL';
+    const codigo = 'X';
+    const stations = [{ name: 'Urubó', type: 'gasgroup', product, codigo }];
+    const json = { estaciones: [{ codigo, tanques: [
+      { producto: product, litros: 2000 },
+      { producto: product, litros: 1500 },
+    ] }] };
+    expect(widget.parseGasGroup(json, product, codigo)).toBe(readSource(stations, json)[0][1]);
   });
 });

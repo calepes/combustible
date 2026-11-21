@@ -1,6 +1,7 @@
 name = "combustible-proxy"
 main = "worker.js"
 compatibility_date = "2024-01-01"
+compatibility_flags = ["cache_option_enabled"]
 
 [triggers]
 # Monitor de gasolina APAGADO 2026-06-19 — el cron cada minuto quemaba ~576 writes/día

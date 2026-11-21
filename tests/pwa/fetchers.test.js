@@ -1,204 +1,92 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import {
-  normalizeLiters,
-  parseGenex,
-  parseEC2,
-  parseGasGroup,
-  parseChartJson,
   haversineKm,
   getDistances,
   osrmDistances,
+  fetchAllStations,
+  getNavUrl,
+  coalesceRefresh,
 } from '../../pwa/shared/fetchers.js';
 
-/* ── normalizeLiters ─────────────────── */
+afterEach(() => vi.unstubAllGlobals());
 
-describe('normalizeLiters', () => {
-  it('extrae digitos de formato con punto', () => {
-    expect(normalizeLiters('1.234')).toBe(1234);
-  });
-
-  it('extrae digitos de formato con coma', () => {
-    expect(normalizeLiters('1,234')).toBe(1234);
-  });
-
-  it('maneja numero sin separador', () => {
-    expect(normalizeLiters('5000')).toBe(5000);
-  });
-
-  it('retorna 0 para null/undefined', () => {
-    expect(normalizeLiters(null)).toBe(0);
-    expect(normalizeLiters(undefined)).toBe(0);
-  });
-
-  it('retorna 0 para string vacio', () => {
-    expect(normalizeLiters('')).toBe(0);
-  });
-
-  it('retorna 0 para string sin digitos', () => {
-    expect(normalizeLiters('abc')).toBe(0);
-  });
-
-  it('maneja numeros grandes', () => {
-    expect(normalizeLiters('12.345.678')).toBe(12345678);
-  });
-});
-
-/* ── parseGenex ──────────────────────── */
-
-describe('parseGenex', () => {
-  const makeHtml = (key, fuel, litros) =>
-    `<div>${key}</div><span>${fuel}</span><b>${litros} litros</b>`;
-
-  it('extrae litros de HTML valido', () => {
-    const html = makeHtml('GENEX I', 'G. ESPECIAL+', '3.500');
-    expect(parseGenex(html, 'GENEX I', 'G. ESPECIAL+')).toBe(3500);
-  });
-
-  it('retorna 0 si no encuentra key', () => {
-    const html = makeHtml('OTRA KEY', 'G. ESPECIAL+', '3.500');
-    expect(parseGenex(html, 'GENEX I', 'G. ESPECIAL+')).toBe(0);
-  });
-
-  it('retorna 0 si no encuentra fuel', () => {
-    const html = makeHtml('GENEX I', 'DIESEL', '3.500');
-    expect(parseGenex(html, 'GENEX I', 'G. ESPECIAL+')).toBe(0);
-  });
-
-  it('retorna 0 para html null', () => {
-    expect(parseGenex(null, 'GENEX I', 'G. ESPECIAL+')).toBe(0);
-  });
-
-  it('maneja nbsp y espacios multiples', () => {
-    const html = '<div>GENEX I</div>&nbsp;&nbsp;<span>G. ESPECIAL+</span>  <b>2,100 litros</b>';
-    expect(parseGenex(html, 'GENEX I', 'G. ESPECIAL+')).toBe(2100);
-  });
-
-  it('es case insensitive en litros', () => {
-    const html = '<div>GENEX I</div><span>G. ESPECIAL+</span><b>1500 LITROS</b>';
-    expect(parseGenex(html, 'GENEX I', 'G. ESPECIAL+')).toBe(1500);
-  });
-});
-
-/* ── parseEC2 ────────────────────────── */
-
-describe('parseEC2', () => {
-  const makeHtml = (key, litros) =>
-    `<div>${key}</div><span>Volumen disponible</span><b>${litros} Lts</b>`;
-
-  it('extrae litros de HTML valido', () => {
-    const html = makeHtml('T-ESPECIAL', '4,200');
-    expect(parseEC2(html, 'T-ESPECIAL')).toBe(4200);
-  });
-
-  it('retorna 0 si no encuentra key', () => {
-    const html = makeHtml('OTRO', '4,200');
-    expect(parseEC2(html, 'T-ESPECIAL')).toBe(0);
-  });
-
-  it('retorna 0 para html null', () => {
-    expect(parseEC2(null, 'T-ESPECIAL')).toBe(0);
-  });
-
-  it('retorna 0 si no tiene Volumen disponible', () => {
-    const html = '<div>T-ESPECIAL</div><span>Otro campo</span><b>4,200 Lts</b>';
-    expect(parseEC2(html, 'T-ESPECIAL')).toBe(0);
-  });
-});
-
-/* ── parseGasGroup ───────────────────── */
-
-describe('parseGasGroup', () => {
-  const COD = 'ABC123';
-  const makeJson = (tanques) => ({
-    estaciones: [{ codigo: COD, tanques }],
-  });
-
-  it('suma litros de tanques con el producto correcto', () => {
-    const json = makeJson([
-      { producto: 'GASOLINA ESPECIAL', litros: 2000 },
-      { producto: 'GASOLINA ESPECIAL', litros: 1500 },
-      { producto: 'DIESEL', litros: 3000 },
-    ]);
-    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(3500);
-  });
-
-  it('retorna 0 si total esta bajo el umbral (1500)', () => {
-    const json = makeJson([
-      { producto: 'GASOLINA ESPECIAL', litros: 500 },
-    ]);
-    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(0);
-  });
-
-  it('retorna 0 para json null', () => {
-    expect(parseGasGroup(null, 'GASOLINA ESPECIAL', COD)).toBe(0);
-  });
-
-  it('retorna 0 si no hay tanques', () => {
-    expect(parseGasGroup({ estaciones: [{ codigo: COD }] }, 'GASOLINA ESPECIAL', COD)).toBe(0);
-  });
-
-  it('retorna 0 si codigo no coincide', () => {
-    const json = makeJson([
-      { producto: 'GASOLINA ESPECIAL', litros: 5000 },
-    ]);
-    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', 'OTRO')).toBe(0);
-  });
-
-  it('match es case insensitive via includes', () => {
-    const json = makeJson([
-      { producto: 'gasolina especial', litros: 2000 },
-    ]);
-    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(2000);
-  });
-
-  it('maneja litros undefined como 0', () => {
-    const json = makeJson([
-      { producto: 'GASOLINA ESPECIAL' },
-      { producto: 'GASOLINA ESPECIAL', litros: 2000 },
-    ]);
-    expect(parseGasGroup(json, 'GASOLINA ESPECIAL', COD)).toBe(2000);
-  });
-});
-
-/* ── parseChartJson ──────────────────── */
-
-describe('parseChartJson', () => {
-  const makeChartHtml = (rows) => {
-    const chart = { dataTable: { rows } };
-    const jsonStr = JSON.stringify(chart)
-      .replace(/\\/g, '\\\\')
-      .replace(/'/g, "\\'");
-    return `<html>'chartJson' : '${jsonStr}'</html>`;
+describe('stock agregado', () => {
+  const station = {
+    name: 'Vangas', type: 'genex', company: 'Genex', lat: -17.77, lon: -63.21,
+    waze: 'https://waze.com/ul?q=Vangas&navigate=yes',
   };
 
-  it('extrae litros del producto correcto', () => {
-    const html = makeChartHtml([
-      { c: [{ v: 'GASOLINA ESPECIAL' }, { v: 4500 }] },
-      { c: [{ v: 'DIESEL' }, { v: 8000 }] },
-    ]);
-    expect(parseChartJson(html, 'GASOLINA ESPECIAL')).toBe(4500);
+  function setupStorage() {
+    const data = new Map();
+    vi.stubGlobal('localStorage', {
+      getItem: (key) => data.get(key) ?? '{}',
+      setItem: (key, value) => data.set(key, value),
+    });
+  }
+
+  function response(litros, observedAt, status = 'fresh') {
+    return Response.json([{
+      name: station.name, litros: status === 'fresh' ? litros : 0, capacidad: 9000,
+      stock: { litros, observedAt, status },
+    }]);
+  }
+
+  it('actualiza stock y hora con una llamada y conserva navegación y coordenadas', async () => {
+    setupStorage();
+    vi.stubGlobal('navigator', { userAgent: 'iPhone' });
+    const fetch = vi.fn()
+      .mockImplementationOnce(() => response(3000, 1000))
+      .mockImplementationOnce(() => response(9000, 2000));
+    vi.stubGlobal('fetch', fetch);
+    const [first] = await fetchAllStations([station]);
+    const [second] = await fetchAllStations([station], { refresh: true });
+    expect(first).toMatchObject({ litros: 3000, observedAt: 1000 });
+    expect(second).toMatchObject({
+      litros: 9000, observedAt: 2000, lat: station.lat, lon: station.lon, waze: station.waze,
+    });
+    expect(getNavUrl(second)).toBe(station.waze);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(new URL(fetch.mock.calls[1][0]).pathname).toBe('/api/stations');
+    expect(new URL(fetch.mock.calls[1][0]).searchParams.get('refresh')).toBe('1');
   });
 
-  it('retorna 0 si no encuentra el producto', () => {
-    const html = makeChartHtml([
-      { c: [{ v: 'DIESEL' }, { v: 8000 }] },
-    ]);
-    expect(parseChartJson(html, 'GASOLINA ESPECIAL')).toBe(0);
+  it('conserva el dato más nuevo tras un error de red, HTTP o respuesta anterior, y acepta cero real', async () => {
+    setupStorage();
+    vi.stubGlobal('fetch', vi.fn()
+      .mockImplementationOnce(() => response(9000, 2000))
+      .mockRejectedValueOnce(new TypeError('Sin red'))
+      .mockImplementationOnce(() => new Response('', { status: 503 }))
+      .mockImplementationOnce(() => response(3000, 1000))
+      .mockImplementationOnce(() => Response.json([{ name: station.name, litros: 9500 }]))
+      .mockImplementationOnce(() => response(0, 3000)));
+    await fetchAllStations([station]);
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const [fallback] = await fetchAllStations([station], { refresh: true });
+      expect(fallback).toMatchObject({ litros: 9000, observedAt: 2000, status: 'stale', available: false });
+    }
+    const [zero] = await fetchAllStations([station], { refresh: true });
+    expect(zero).toMatchObject({ litros: 0, observedAt: 3000, status: 'fresh', available: false });
   });
 
-  it('retorna 0 para html null', () => {
-    expect(parseChartJson(null, 'GASOLINA ESPECIAL')).toBe(0);
+  it('muestra ausencia de lectura si falla sin respaldo', async () => {
+    setupStorage();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Sin red')));
+    const [row] = await fetchAllStations([{ ...station, name: 'Sin historial' }]);
+    expect(row).toMatchObject({ litros: null, observedAt: null, status: 'unknown', available: false });
   });
 
-  it('retorna 0 si no hay chartJson en el html', () => {
-    expect(parseChartJson('<html>nada</html>', 'GASOLINA ESPECIAL')).toBe(0);
-  });
-
-  it('es case insensitive en producto', () => {
-    const html = makeChartHtml([
-      { c: [{ v: 'gasolina especial' }, { v: 3200 }] },
-    ]);
-    expect(parseChartJson(html, 'GASOLINA ESPECIAL')).toBe(3200);
+  it('agrupa refrescos solapados hasta terminar de pintar y vuelve a aceptar otro tras un error', async () => {
+    let reject;
+    const first = new Promise((_, fail) => { reject = fail; });
+    const paint = vi.fn().mockReturnValueOnce(first).mockResolvedValueOnce('nuevo');
+    const refresh = coalesceRefresh(paint);
+    const initial = refresh();
+    expect(refresh({ refresh: true })).toBe(initial);
+    expect(paint).toHaveBeenCalledTimes(1);
+    reject(new Error('No se pudo pintar'));
+    await expect(initial).rejects.toThrow('No se pudo pintar');
+    await expect(refresh({ refresh: true })).resolves.toBe('nuevo');
+    expect(paint).toHaveBeenCalledTimes(2);
   });
 });
 

@@ -70,18 +70,17 @@ pwa/
 ├── map/index.html      ← Vista mapa (Google Maps, markers con litros)
 └── shared/
     ├── stations.js     ← Config de 27 estaciones (coords, URLs, keys)
-    ├── fetchers.js     ← Fetch via proxy, parsers por tipo, capacidad (KV), distancias
+    ├── fetchers.js     ← Stock agregado, respaldo con hora y cálculo de distancias
     └── icons/          ← PNG icons (bomba 3D de thiings.co)
 ```
 
 ### Flujo de datos (PWA)
-1. `getUserLocation()` + `fetchAllStations()` en paralelo
-2. Cada estación se parsea según su `type`: genex (HTML), ec2 (HTML), gasgroup (JSON), gsheets (chartJson)
-3. Todas las requests van via el CORS proxy (`combustible-proxy.carlos-cb4.workers.dev`)
-4. Litros observados se reportan a `POST /capacidad` del proxy → Cloudflare KV guarda el máximo histórico
-5. El % real de cada estación se calcula como `litros / capacidad` (máximo histórico observado)
-6. Distancias: Google Distance Matrix API → OSRM fallback → Haversine fallback
-7. Ordenar por distancia, renderizar (journey timeline o mapa)
+1. Las tres vistas leen stock y máximos observados en una solicitud a `GET /api/stations`. Los botones de actualización añaden `?refresh=1`.
+2. El Worker usa el catálogo de `pwa/shared/stations.js`, consulta una vez por URL y lee las fuentes en `proxy/readings.js`.
+3. Cada estación conserva su volumen, estado y hora de observación. Ante un fallo se muestra el último dato como anterior. Solo una lectura nueva válida puede elevar el máximo.
+4. Tarjetas y mapa calculan distancias con Google Distance Matrix, OSRM o Haversine. La navegación sigue usando el catálogo local.
+
+Publicar primero el Worker con `stock` en `/api/stations` y verificar el contrato. Publicar después las PWA. Para revertir ambos, restaurar primero las PWA anteriores.
 
 ### Tipos de estación y parsers
 

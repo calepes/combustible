@@ -164,7 +164,22 @@
     }
 
     .dot.unavailable {
-      color: var(--red);
+      color: var(--text-tertiary);
+    }
+
+    .station-detail {
+      min-width: 0;
+    }
+
+    .station-title {
+      display: flex;
+      align-items: baseline;
+    }
+
+    .station-reading {
+      display: block;
+      font-size: 11px;
+      color: var(--text-secondary);
     }
 
     .station-name {
@@ -199,7 +214,7 @@
     }
 
     .station-litros.unavailable {
-      color: var(--red);
+      color: var(--text-secondary);
     }
 
     /* Footer */
@@ -244,13 +259,13 @@
       <div class="loading" id="loading">Cargando...</div>
     </div>
     <div class="footer">
-      <span class="footer-text" id="footerTime"></span>
+      <span class="footer-text" id="footerTime" role="status"></span>
     </div>
   </div>
 
   <script type="module">
     import { STATIONS } from '../shared/stations.js';
-    import { fetchAllStations, getNavUrl } from '../shared/fetchers.js';
+    import { fetchAllStations, getNavUrl, coalesceRefresh, stockLabel, stockSummary } from '../shared/fetchers.js';
 
     const listCard = document.getElementById('listCard');
     const loading = document.getElementById('loading');
@@ -259,19 +274,20 @@
     const footerTime = document.getElementById('footerTime');
     const refreshBtn = document.getElementById('refreshBtn');
 
-    async function loadData() {
-      loading.style.display = 'block';
-      listCard.querySelectorAll('.row, .row-separator').forEach(el => el.remove());
-      pill.style.display = 'none';
-      footerTime.textContent = '';
+    const loadData = coalesceRefresh(async ({ refresh = false } = {}) => {
+      if (!listCard.querySelector('.row')) {
+        loading.textContent = 'Cargando…';
+        loading.style.display = 'block';
+      }
 
       try {
-        const results = await fetchAllStations(STATIONS);
-        results.sort((a, b) => b.litros - a.litros);
+        const results = await fetchAllStations(STATIONS, { refresh });
+        results.sort((a, b) => Number(b.available) - Number(a.available) || (b.litros ?? -1) - (a.litros ?? -1));
+        listCard.querySelectorAll('.row, .row-separator').forEach((el) => el.remove());
 
         loading.style.display = 'none';
 
-        const countAvail = results.filter(r => r.litros > 0).length;
+        const countAvail = results.filter((r) => r.available).length;
         pillText.textContent = `${countAvail}/${results.length}`;
         pill.style.display = 'inline-flex';
 
@@ -288,7 +304,7 @@
           row.className = 'row';
 
           const dot = document.createElement('span');
-          dot.className = `dot ${r.litros > 0 ? 'available' : 'unavailable'}`;
+          dot.className = `dot ${r.available ? 'available' : 'unavailable'}`;
           dot.textContent = '\u25CF';
 
           const name = document.createElement('span');
@@ -300,42 +316,34 @@
           company.textContent = r.company;
 
           const litros = document.createElement('span');
-          const cap = r.capacidad || 0;
-          const pctReal = r.litros > 0 && cap > 0 ? Math.round(r.litros / cap * 100) : 0;
-          const litrosStr = r.litros > 0
-            ? `${r.litros.toLocaleString('es-BO')} L` + (pctReal > 0 ? ` (${pctReal}%)` : '')
-            : 'Sin dato';
-          litros.className = `station-litros ${r.litros > 0 ? 'available' : 'unavailable'}`;
-          litros.textContent = litrosStr;
+          const pct = r.litros != null && r.capacidad > 0 ? Math.min(Math.round(r.litros / r.capacidad * 100), 100) : null;
+          litros.className = `station-litros ${r.available ? 'available' : 'unavailable'}`;
+          litros.textContent = r.litros == null ? '—' : `${r.litros.toLocaleString('es-BO')} L${pct == null ? '' : ` (${pct}%)`}`;
 
-          row.appendChild(dot);
-          row.appendChild(name);
-          row.appendChild(company);
-          row.appendChild(litros);
+          const detail = document.createElement('div');
+          detail.className = 'station-detail';
+          const title = document.createElement('div');
+          title.className = 'station-title';
+          title.append(name, company);
+          const reading = document.createElement('small');
+          reading.className = 'station-reading';
+          reading.textContent = stockLabel(r);
+          detail.append(title, reading);
 
-          // Navigation link: Waze on mobile, Google Maps on desktop
-          const station = STATIONS.find(s => s.name === r.name);
-          if (station) {
-            row.addEventListener('click', () => {
-              window.open(getNavUrl(station), '_blank');
-            });
-          }
+          row.append(dot, detail, litros);
+          row.addEventListener('click', () => window.open(getNavUrl(r), '_blank'));
 
           listCard.appendChild(row);
         }
 
-        // Update footer time
-        const now = new Date();
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        footerTime.textContent = `Actualizado ${hh}:${mm}`;
+        footerTime.textContent = stockSummary(results);
       } catch (err) {
         loading.textContent = 'Error al cargar datos';
         console.error('Error:', err);
       }
-    }
+    });
 
-    refreshBtn.addEventListener('click', loadData);
+    refreshBtn.addEventListener('click', () => loadData({ refresh: true }));
 
     // Initial load
     loadData();

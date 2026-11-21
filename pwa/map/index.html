@@ -305,6 +305,7 @@
     <div class="header-left">
       <span class="header-title">Combustible</span>
       <span class="header-subtitle">Gasolina Especial</span>
+      <span class="header-subtitle" id="stockStatus" role="status"></span>
     </div>
     <div class="header-right">
       <span class="pill" id="pill" style="display:none"></span>
@@ -343,9 +344,10 @@
 
   <script type="module">
     import { STATIONS } from '../shared/stations.js';
-    import { fetchAllStations, getDistances, getNavUrl } from '../shared/fetchers.js';
+    import { fetchAllStations, getDistances, getNavUrl, coalesceRefresh, stockLabel, stockSummary } from '../shared/fetchers.js';
 
     const pillEl = document.getElementById('pill');
+    const stockStatus = document.getElementById('stockStatus');
     const refreshBtn = document.getElementById('refreshBtn');
     const locateBtn = document.getElementById('locateBtn');
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -372,7 +374,7 @@
     }
 
     function formatLitrosShort(litros) {
-      if (litros === 0) return '0';
+      if (litros == null) return '—';
       if (litros >= 1000) return Math.round(litros / 1000) + 'K';
       return String(litros);
     }
@@ -422,10 +424,10 @@
     /* ── InfoWindow HTML ─────────────────── */
 
     function buildInfoWindowHtml(station, colorClass, litros, pct, distKm, navUrl) {
-      const available = litros > 0;
-      const pctRound = Math.round(pct * 100);
+      const hasReading = litros != null;
+      const pctText = pct == null ? '—' : `${Math.round(pct * 100)}%`;
 
-      const barFill = available
+      const barFill = pct > 0
         ? `<div class="iw-bar-fill ${colorClass}" style="width:${Math.max(pct * 100, 5)}%"></div>`
         : '';
 
@@ -445,14 +447,14 @@
           <span class="iw-name">${station.name}</span>
           <div class="iw-dot ${colorClass}"></div>
         </div>
-        <div class="iw-company">${station.company}</div>
+        <div class="iw-company">${station.company} · ${stockLabel(station)}</div>
         <div class="iw-litros-row">
-          <span class="iw-litros${available ? '' : ' empty'}">${available ? formatNumber(litros) : '\u2014'}</span>
-          ${available ? '<span class="iw-unit">litros</span>' : ''}
+          <span class="iw-litros${hasReading ? '' : ' empty'}">${hasReading ? formatNumber(litros) : '—'}</span>
+          ${hasReading ? '<span class="iw-unit">litros</span>' : ''}
         </div>
         <div class="iw-bar">
           <div class="iw-bar-track">${barFill}</div>
-          <span class="iw-bar-pct">${pctRound}%</span>
+          <span class="iw-bar-pct">${pctText}</span>
         </div>
         <div class="iw-bottom">
           ${ctaHtml}
@@ -504,42 +506,20 @@
 
     /* ── Data loading ────────────────────── */
 
-    async function loadData() {
+    const loadData = coalesceRefresh(async ({ refresh = false } = {}) => {
       refreshBtn.classList.add('spinning');
       loadingOverlay.classList.remove('hidden');
 
       try {
         const [location, stationResults] = await Promise.all([
           getUserLocation(),
-          fetchAllStations(STATIONS),
+          fetchAllStations(STATIONS, { refresh }),
         ]);
-
-        const stationMap = {};
-        const coordMap = {};
-        for (const s of STATIONS) {
-          stationMap[s.name] = s;
-          coordMap[s.name] = { lat: s.lat, lon: s.lon };
-        }
-
-        let results = stationResults.map((r) => ({
-          ...r,
-          navUrl: stationMap[r.name] ? getNavUrl(stationMap[r.name]) : null,
-          lat: coordMap[r.name]?.lat,
-          lon: coordMap[r.name]?.lon,
-          distKm: null,
-        }));
 
         const refLat = location ? location.lat : DEFAULT_LAT;
         const refLon = location ? location.lon : DEFAULT_LON;
-        const withDist = await getDistances(refLat, refLon, results);
-        results = withDist.map((r) => ({
-          ...r,
-          navUrl: stationMap[r.name] ? getNavUrl(stationMap[r.name]) : null,
-          lat: coordMap[r.name]?.lat,
-          lon: coordMap[r.name]?.lon,
-        }));
-
-        const maxLitros = Math.max(...results.map((r) => r.litros), 1);
+        const results = (await getDistances(refLat, refLon, stationResults))
+          .map((row) => ({ ...row, navUrl: getNavUrl(row) }));
 
         // Clear old markers
         for (const m of stationMarkers) m.setMap(null);
@@ -553,10 +533,9 @@
         for (const r of results) {
           if (r.lat == null || r.lon == null) continue;
 
-          const cap = r.capacidad > 0 ? r.capacidad : maxLitros;
-          const colorClass = getColorClass(r.litros, cap);
+          const colorClass = r.available ? getColorClass(r.litros, r.capacidad) : 'gray';
           const litrosShort = formatLitrosShort(r.litros);
-          const pct = r.litros > 0 ? r.litros / cap : 0;
+          const pct = r.litros != null && r.capacidad > 0 ? Math.min(r.litros / r.capacidad, 1) : null;
           const bgColor = COLOR_HEX[colorClass];
 
           const marker = new google.maps.Marker({
@@ -623,20 +602,21 @@
         }
 
         // Update pill
-        const countAvail = results.filter((r) => r.litros > 0).length;
+        const countAvail = results.filter((r) => r.available).length;
         pillEl.textContent = `${countAvail}/${results.length}`;
         pillEl.style.display = '';
+        stockStatus.textContent = stockSummary(results);
       } catch (err) {
         console.error('Error cargando datos:', err);
       } finally {
         refreshBtn.classList.remove('spinning');
         loadingOverlay.classList.add('hidden');
       }
-    }
+    });
 
     /* ── Events ──────────────────────────── */
 
-    refreshBtn.addEventListener('click', loadData);
+    refreshBtn.addEventListener('click', () => loadData({ refresh: true }));
 
     locateBtn.addEventListener('click', async () => {
       const loc = await getUserLocation();

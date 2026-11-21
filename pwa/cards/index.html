@@ -439,14 +439,14 @@
     </div>
 
     <div class="update-footer" id="footer" style="display:none">
-      <span id="footerText"></span>
+      <span id="footerText" role="status"></span>
     </div>
   </div>
 
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCeQumrwhLuL4n8PTcFrMuq5tt4ipwUu_s"></script>
   <script type="module">
     import { STATIONS } from '../shared/stations.js';
-    import { fetchAllStations, getDistances, haversineKm, getNavUrl } from '../shared/fetchers.js';
+    import { fetchAllStations, getDistances, getNavUrl, coalesceRefresh, stockLabel, stockSummary } from '../shared/fetchers.js';
 
     const contentEl = document.getElementById('content');
     const pillEl = document.getElementById('pill');
@@ -505,7 +505,6 @@
     function renderJourney(stations) {
       const journey = document.createElement('div');
       journey.className = 'journey';
-      const maxLitros = Math.max(...stations.map((r) => r.litros), 1);
 
       // Origin node
       const origin = document.createElement('div');
@@ -519,11 +518,9 @@
       let prevDistanceEstimated = false;
 
       for (const r of stations) {
-        const available = r.litros > 0;
-        const cap = r.capacidad > 0 ? r.capacidad : maxLitros;
-        const pct = available ? r.litros / cap : 0;
-        const pctRound = Math.round(pct * 100);
-        const colorClass = getColorClass(r.litros, cap);
+        const available = r.available;
+        const pct = r.litros != null && r.capacidad > 0 ? Math.min(r.litros / r.capacidad, 1) : null;
+        const colorClass = available ? getColorClass(r.litros, r.capacidad) : 'gray';
 
         // Distance separator (incremental: distance between stations)
         if (r.distKm != null) {
@@ -584,7 +581,7 @@
         // Company
         const company = document.createElement('span');
         company.className = 'card-company';
-        company.textContent = r.company;
+        company.textContent = `${r.company} · ${stockLabel(r)}`;
         info.appendChild(company);
 
         // Litros
@@ -592,9 +589,9 @@
         litrosRow.className = 'litros-row';
         const numEl = document.createElement('span');
         numEl.className = `litros-number${available ? '' : ' empty'}`;
-        numEl.textContent = available ? formatNumber(r.litros) : '\u2014';
+        numEl.textContent = r.litros == null ? '—' : formatNumber(r.litros);
         litrosRow.appendChild(numEl);
-        if (available) {
+        if (r.litros != null) {
           const unitEl = document.createElement('span');
           unitEl.className = 'litros-unit';
           unitEl.textContent = 'litros';
@@ -616,7 +613,7 @@
         stockBar.appendChild(barTrack);
         const pctText = document.createElement('span');
         pctText.className = 'bar-pct';
-        pctText.textContent = `${pctRound}%`;
+        pctText.textContent = pct == null ? '—' : `${Math.round(pct * 100)}%`;
         stockBar.appendChild(pctText);
         info.appendChild(stockBar);
 
@@ -649,36 +646,20 @@
       return journey;
     }
 
-    async function loadData() {
+    const loadData = coalesceRefresh(async ({ refresh = false } = {}) => {
       refreshBtn.classList.add('spinning');
 
       try {
         // Fetch location and station data in parallel
         const [location, stationResults] = await Promise.all([
           getUserLocation(),
-          fetchAllStations(STATIONS),
+          fetchAllStations(STATIONS, { refresh }),
         ]);
 
-        // Map station config by name for nav links
-        const stationMap = {};
-        for (const s of STATIONS) {
-          stationMap[s.name] = s;
-        }
-
-        let results = stationResults.map((r) => ({
-          ...r,
-          navUrl: stationMap[r.name] ? getNavUrl(stationMap[r.name]) : null,
-          distKm: null,
-        }));
-
-        // Get distances — use real location or fallback to city center
         const refLat = location ? location.lat : DEFAULT_LAT;
         const refLon = location ? location.lon : DEFAULT_LON;
-        const withDist = await getDistances(refLat, refLon, results);
-        results = withDist.map((r) => ({
-          ...r,
-          navUrl: stationMap[r.name] ? getNavUrl(stationMap[r.name]) : null,
-        }));
+        const results = (await getDistances(refLat, refLon, stationResults))
+          .map((row) => ({ ...row, navUrl: getNavUrl(row) }));
 
         // Sort by distance
         results.sort((a, b) => a.distKm - b.distKm);
@@ -686,7 +667,7 @@
         const top = results.slice(0, MAX_ITEMS);
 
         // Update pill
-        const countAvail = top.filter((r) => r.litros > 0).length;
+        const countAvail = top.filter((r) => r.available).length;
         pillEl.textContent = `${countAvail}/${top.length}`;
         pillEl.style.display = '';
 
@@ -695,21 +676,18 @@
         contentEl.innerHTML = '';
         contentEl.appendChild(journey);
 
-        // Update footer
-        const now = new Date();
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        footerTextEl.textContent = `Actualizado ${hh}:${mm}`;
-        footerEl.style.display = '';
+        const summary = stockSummary(top);
+        footerTextEl.textContent = summary;
+        footerEl.style.display = summary ? '' : 'none';
       } catch (err) {
         console.error('Error cargando datos:', err);
         contentEl.innerHTML = `<div class="loading" style="color:var(--text-secondary)">Error al cargar datos. Toca actualizar.</div>`;
       } finally {
         refreshBtn.classList.remove('spinning');
       }
-    }
+    });
 
-    refreshBtn.addEventListener('click', loadData);
+    refreshBtn.addEventListener('click', () => loadData({ refresh: true }));
 
     // Reload data when returning to the app (e.g. after opening Waze)
     document.addEventListener('visibilitychange', () => {

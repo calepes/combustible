@@ -13,7 +13,8 @@ Contexto general del repo en `../CLAUDE.md`.
 ## Shared
 
 - `shared/stations.js` — Config de 27 estaciones (coords, URLs, keys, tipo)
-- `shared/fetchers.js` — Fetch via proxy, parsers por tipo, capacidad (KV), distancias (Google → OSRM → Haversine)
+- `shared/fetchers.js` — Stock agregado, último dato válido con hora y distancias (Google → OSRM → Haversine)
+- `shared/sw-cache.js` — Caché del app shell. El lector de stock mantiene su respaldo por separado con la hora de observación.
 - `shared/icons/` — PNG icons bomba 3D (192, 512, apple-touch-icon)
 
 ## Desarrollo local
@@ -25,14 +26,11 @@ python3 -m http.server 8000
 
 ## Capacidad estimada
 
-Las vistas muestran el **% real** de cada estación (`litros / capacidad`). La capacidad se estima automáticamente:
-- `fetchAllStations()` reporta litros observados a `POST /capacidad` del proxy
-- Cloudflare KV guarda el máximo histórico por estación (universal, server-side)
-- Si no hay capacidad aún, fallback a `maxLitros` (máximo entre estaciones visibles)
+Las vistas calculan el porcentaje sobre el máximo histórico observado de cada estación. El Worker devuelve ese máximo junto con el stock. Las estaciones sin máximo conocido muestran el volumen sin porcentaje.
 
 ## Gotchas
 
-- **SW cache bump:** cada cambio requiere incrementar `CACHE_NAME` en el `sw.js` de cada vista (cards: v16, map: v11, list: v6)
+- **SW cache bump:** al cambiar el app shell, incrementar la versión en el `sw.js` de las vistas afectadas.
 - **Google Maps API Key:** hardcoded en `map/index.html` y `cards/index.html`. Restringida a `apps.lepesqueur.net` y `localhost`
 - **Distance Matrix:** client-side via `google.maps.DistanceMatrixService`, batch de 25 destinos por request
 - **Rivero parser:** Google Sheets chartJson es frágil — múltiples fallbacks de deserialización

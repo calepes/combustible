@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import { STATIONS } from '../../pwa/shared/stations.js';
 
 /**
  * Tests para la logica de capacidad del worker (Cloudflare KV).
@@ -40,6 +41,83 @@ function makeRequest(method, path, body) {
   }
   return new Request(url, opts);
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+describe('GET /api/stations', () => {
+  const stationRow = (name, liters) =>
+    `<span class="station_name">${name}</span><span class="product_name">G. ESPECIAL+</span>${liters == null ? '' : `<span class="product_volume">${liters} litros</span>`}`;
+
+  it('reutiliza una lectura dentro de la vigencia y vuelve a consultar al actualizar', async () => {
+    const env = makeEnv();
+    let liters = 3000;
+    const now = vi.spyOn(Date, 'now').mockReturnValue(100_000);
+    const fetchSource = vi.fn(async (address) => {
+      const url = new URL(address);
+      if (url.hostname !== 'genex.com.bo') return new Response('', { status: 503 });
+      return new Response(url.search ? stationRow('GENEX I', 7000) : stationRow('VANGAS', liters));
+    });
+    vi.stubGlobal('fetch', fetchSource);
+
+    const find = async (path, name) => (await (await worker.fetch(makeRequest('GET', path), env)).json())
+      .find((row) => row.name === name);
+    expect(await find('/api/stations', 'Vangas')).toMatchObject({
+      litros: 3000, capacidad: 3000, stock: { litros: 3000, observedAt: 100_000, status: 'fresh' },
+    });
+    expect(fetchSource).toHaveBeenCalledTimes(new Set(STATIONS.map((s) => s.url)).size);
+    const banzer = await find('/api/stations', 'Genex Banzer');
+    expect(banzer).toMatchObject({ litros: 7000, lat: expect.any(Number), lon: expect.any(Number) });
+
+    now.mockReturnValue(112_000);
+    liters = 9000;
+    expect((await find('/api/stations', 'Vangas')).stock.observedAt).toBe(100_000);
+    expect(fetchSource).toHaveBeenCalledTimes(5);
+    expect(await find('/api/stations?refresh=1', 'Vangas')).toMatchObject({
+      litros: 9000, capacidad: 9000, stock: { litros: 9000, observedAt: 112_000, status: 'fresh' },
+    });
+    expect(fetchSource).toHaveBeenCalledTimes(10);
+  });
+
+  it('conserva la última lectura válida ante un fallo y luego acepta cero como lectura nueva', async () => {
+    const env = makeEnv();
+    let failure = false;
+    let liters = 3000;
+    const now = vi.spyOn(Date, 'now').mockReturnValue(100_000);
+    vi.stubGlobal('fetch', vi.fn(async (address) => new URL(address).hostname === 'genex.com.bo' && !failure
+      ? new Response(stationRow('VANGAS', liters))
+      : new Response('', { status: 503 })));
+    const refresh = async () => (await (await worker.fetch(makeRequest('GET', '/api/stations?refresh=1'), env)).json())
+      .find((row) => row.name === 'Vangas');
+    await refresh();
+    now.mockReturnValue(102_000);
+    failure = true;
+    expect(await refresh()).toMatchObject({
+      litros: 0, capacidad: 3000, stock: { litros: 3000, observedAt: 100_000, status: 'stale' },
+    });
+    now.mockReturnValue(104_000);
+    failure = false;
+    liters = 0;
+    expect(await refresh()).toMatchObject({
+      litros: 0, capacidad: 3000, stock: { litros: 0, observedAt: 104_000, status: 'fresh' },
+    });
+  });
+
+  it('no asigna a una estación el volumen de la siguiente ni registra ese valor como capacidad', async () => {
+    const env = makeEnv();
+    const html = stationRow('VANGAS', null) + stationRow('GENEX GUARACACHI', '9,000');
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(html)));
+    const rows = await (await worker.fetch(makeRequest('GET', '/api/stations'), env)).json();
+    expect(rows).toHaveLength(27);
+    expect(rows.find((row) => row.name === 'Vangas')).toMatchObject({
+      litros: 0, capacidad: 0, stock: { litros: null, observedAt: null, status: 'unknown' },
+    });
+    expect(rows.find((row) => row.name === 'Genex Guaracachi').litros).toBe(9000);
+    expect(JSON.parse(env.CAPACIDAD._store.capacidad_max)).not.toHaveProperty('Vangas');
+  });
+});
 
 /* ── Tests ────────────────────────────── */
 

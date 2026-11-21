@@ -3,7 +3,6 @@
  * Portado de widget/cards-widget.js para uso en PWAs (fetch API)
  */
 
-import { GASGROUP_MIN_LITROS } from './stations.js';
 
 /* ── Proxy ────────────────────────────── */
 
@@ -21,121 +20,13 @@ export async function proxyFetch(url) {
 /* ── Helpers ──────────────────────────── */
 
 /**
- * Extrae solo digitos y retorna numero entero.
- * Maneja formatos como "1.234", "1,234", "1234".
- */
-export function normalizeLiters(raw) {
-  if (!raw) return 0;
-  const digits = raw.replace(/[^\d]/g, '');
-  return digits ? Number(digits) : 0;
-}
-
-/**
  * Retorna URL de navegacion segun plataforma:
  * movil → Waze (deep link), desktop → Google Maps directions
  */
 export function getNavUrl(station) {
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if (isMobile) return station.waze;
+  if (isMobile && station.waze) return station.waze;
   return `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lon}`;
-}
-
-/* ── Parsers ──────────────────────────── */
-
-/**
- * Parsea HTML de Genex para extraer litros disponibles.
- * Busca patron: KEY ... FUEL ... N litros
- */
-export function parseGenex(html, key, fuel) {
-  if (!html) return 0;
-  const clean = html
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\u00A0/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/\s+/g, ' ');
-
-  const escapedFuel = fuel
-    .replace(/\./g, '\\.')
-    .replace(/\+/g, '\\+');
-
-  const re = new RegExp(
-    `${key}[\\s\\S]*?${escapedFuel}[\\s\\S]*?(\\d{1,3}(?:[\\.,]\\d{3})*|\\d+)\\s*litros`,
-    'i'
-  );
-  const m = clean.match(re);
-  return m ? normalizeLiters(m[1]) : 0;
-}
-
-/**
- * Parsea HTML de Biopetrol EC2 para extraer litros disponibles.
- * Busca patron: KEY ... Volumen disponible ... N Lts
- */
-export function parseEC2(html, key) {
-  if (!html) return 0;
-  const clean = html.replace(/\s+/g, ' ');
-  const re = new RegExp(
-    `${key}[\\s\\S]*?Volumen disponible[\\s\\S]*?(\\d{1,3}(?:,\\d{3})*)\\s*Lts`,
-    'i'
-  );
-  const m = clean.match(re);
-  return m ? normalizeLiters(m[1]) : 0;
-}
-
-/**
- * Parsea JSON de Gasgroup API (v2: /estaciones/{depto}).
- * Busca la estacion por codigo, suma litros de tanques que contienen el producto.
- * Retorna 0 si el total esta por debajo del umbral minimo (lecturas poco confiables).
- */
-export function parseGasGroup(json, product, codigo) {
-  if (!json?.estaciones) return 0;
-  const estacion = json.estaciones.find((e) => e.codigo === codigo);
-  if (!estacion?.tanques) return 0;
-  let total = 0;
-  for (const t of estacion.tanques) {
-    if (t.producto?.toUpperCase().includes(product)) {
-      total += t.litros || 0;
-    }
-  }
-  const rounded = Math.round(total);
-  return rounded >= GASGROUP_MIN_LITROS ? rounded : 0;
-}
-
-/**
- * Parsea HTML de Google Sheets chartiframe para extraer litros.
- * Busca chartJson embebido, lo deserializa, y busca la fila del producto.
- */
-export function parseChartJson(html, product) {
-  if (!html) return 0;
-  const upper = product.toUpperCase();
-  const m = html.match(/'chartJson'\s*:\s*'((?:[^'\\]|\\.)*)'/);
-  if (!m) return 0;
-  try {
-    const unescaped = m[1].replace(/\\(x([0-9a-fA-F]{2})|.)/g, (match, esc, hex) => {
-      if (hex) return String.fromCharCode(parseInt(hex, 16));
-      if (esc === '\\') return '\\';
-      if (esc === "'") return "'";
-      if (esc === 'n') return '\n';
-      return esc;
-    });
-    const chart = JSON.parse(unescaped);
-    const rows = chart?.dataTable?.rows;
-    if (rows) {
-      for (const row of rows) {
-        const cells = row.c || [];
-        const hasProduct = cells.some(
-          (c) =>
-            typeof c?.v === 'string' &&
-            c.v.toUpperCase().includes(upper)
-        );
-        if (!hasProduct) continue;
-        for (const c of cells) {
-          if (typeof c?.v === 'number' && c.v > 0)
-            return Math.round(c.v);
-        }
-      }
-    }
-  } catch (_) {}
-  return 0;
 }
 
 /* ── Distancias ───────────────────────── */
@@ -235,128 +126,102 @@ export async function osrmDistances(originLat, originLon, stations) {
   }
 }
 
-/* ── Capacidad (Cloudflare KV via proxy) ── */
+/* ── Stock del Worker ────────────────── */
 
-const CAPACIDAD_URL = `${PROXY_URL}/capacidad`;
+const STOCK_KEY = 'combustible:last-stocks-v2';
+let sessionStock = {};
+const stockTime = Intl.DateTimeFormat('es-BO', {
+  timeZone: 'America/La_Paz', day: '2-digit', month: '2-digit', year: 'numeric',
+  hour: '2-digit', minute: '2-digit', hour12: false,
+});
 
-/**
- * Obtiene el mapa de capacidades desde Cloudflare KV.
- * @returns {Promise<Object<string, number>>} nombre → capacidad en litros
- */
-export async function fetchCapacityMap() {
+function hasReading(stock) {
+  return Number.isSafeInteger(stock?.litros) && stock.litros >= 0
+    && Number.isSafeInteger(stock.observedAt) && stock.observedAt > 0
+    && stock.observedAt <= 8.64e15;
+}
+
+export function stockLabel(row) {
+  if (row.observedAt == null) return 'Sin lectura';
+  const time = stockTime.format(row.observedAt);
+  if (row.status === 'stale') return `Dato anterior · ${time}`;
+  if (row.litros > 0 && !row.available) return `Bajo umbral · ${time}`;
+  return `Consultado · ${time}`;
+}
+
+export function stockSummary(rows) {
+  const stale = rows.filter((row) => row.status === 'stale').length;
+  const unknown = rows.filter((row) => row.status === 'unknown').length;
+  return [stale && `${stale} con dato anterior`, unknown && `${unknown} sin lectura`].filter(Boolean).join(' · ');
+}
+
+export function coalesceRefresh(load) {
+  let pending;
+  return (options) => {
+    pending ??= load(options).finally(() => { pending = undefined; });
+    return pending;
+  };
+}
+
+export async function fetchAllStations(stations, { refresh = false } = {}) {
+  let rows = [];
+  const url = new URL('/api/stations', PROXY_URL);
+  if (refresh) url.searchParams.set('refresh', '1');
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10_000);
   try {
-    const resp = await fetch(CAPACIDAD_URL);
-    return await resp.json();
-  } catch (e) {
-    console.log('Error fetching capacidad:', e.message);
-    return {};
+    const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data)) rows = data;
+    }
+  } catch {
+    // El respaldo usa la hora de la observación, no la hora de este intento.
+  } finally {
+    clearTimeout(timer);
   }
-}
 
-/**
- * Reporta litros observados al servidor para actualizar el max historico.
- * @param {Array<{name: string, litros: number}>} entries
- * @returns {Promise<Object<string, number>>} mapa actualizado
- */
-export async function reportCapacity(entries) {
+  let stored;
   try {
-    const resp = await fetch(CAPACIDAD_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entries),
-    });
-    return await resp.json();
-  } catch (e) {
-    console.log('Error reporting capacidad:', e.message);
-    return {};
+    stored = JSON.parse(localStorage.getItem(STOCK_KEY));
+  } catch {
+    stored = null;
   }
-}
+  const byName = new Map(rows.filter((row) => typeof row?.name === 'string').map((row) => [row.name, row]));
+  const next = Object.create(null);
+  const results = stations.map((station) => {
+    const row = byName.get(station.name);
+    const saved = stored?.[station.name];
+    const previous = sessionStock[station.name];
+    const last = (saved?.stock?.observedAt ?? 0) >= (previous?.stock?.observedAt ?? 0)
+      ? saved : previous;
+    const current = hasReading(row?.stock) && ['fresh', 'stale'].includes(row.stock.status)
+      && (!hasReading(last?.stock) || row.stock.observedAt >= last.stock.observedAt);
+    const stock = current ? row.stock : (hasReading(last?.stock) ? last.stock : null);
+    const capacidad = Math.max(
+      Number.isFinite(row?.capacidad) ? row.capacidad : 0,
+      Number.isFinite(last?.capacidad) ? last.capacidad : 0,
+      0,
+    );
+    if (stock) next[station.name] = { stock, capacidad };
+    return {
+      ...station,
+      litros: stock?.litros ?? null,
+      observedAt: stock?.observedAt ?? null,
+      status: current ? stock.status : (stock ? 'stale' : 'unknown'),
+      available: current && stock.status === 'fresh' && row.litros > 0,
+      capacidad,
+    };
+  });
 
-/* ── Fetch de estaciones ──────────────── */
-
-/**
- * Cache de respuestas para evitar fetches duplicados (misma URL).
- */
-const fetchCache = {};
-
-async function cachedFetch(url, isJson) {
-  const cacheKey = `${isJson ? 'json' : 'html'}:${url}`;
-  if (!fetchCache[cacheKey]) {
-    fetchCache[cacheKey] = proxyFetch(url)
-      .then((resp) => {
-        if (!resp.ok) {
-          console.log(`Proxy ${resp.status} para ${url}`);
-          delete fetchCache[cacheKey];
-          return isJson ? null : '';
-        }
-        return isJson ? resp.json() : resp.text();
-      })
-      .catch((err) => {
-        delete fetchCache[cacheKey];
-        throw err;
-      });
-  }
-  return fetchCache[cacheKey];
-}
-
-/**
- * Obtiene litros de una estacion segun su tipo.
- * Retorna 0 si falla (nunca lanza error).
- */
-async function fetchStation(s) {
+  sessionStock = next;
   try {
-    if (s.type === 'genex') {
-      const html = await cachedFetch(s.url, false);
-      return parseGenex(html, s.key, s.fuel);
-    }
-    if (s.type === 'ec2') {
-      const html = await cachedFetch(s.url, false);
-      return parseEC2(html, s.key);
-    }
-    if (s.type === 'gasgroup') {
-      const json = await cachedFetch(s.url, true);
-      return parseGasGroup(json, s.product, s.codigo);
-    }
-    if (s.type === 'gsheets') {
-      const html = await cachedFetch(s.url, false);
-      return parseChartJson(html, s.product);
-    }
-    return 0;
-  } catch (err) {
-    console.log(`Error fetching ${s.name}:`, err.message);
-    return 0;
+    localStorage.setItem(STOCK_KEY, JSON.stringify(next));
+  } catch {
+    // El respaldo en memoria sigue disponible en la sesión.
   }
-}
-
-/**
- * Obtiene datos de todas las estaciones en paralelo.
- * Reporta litros observados a Cloudflare KV y obtiene capacidades actualizadas.
- * @param {Array} stations — array de objetos estacion (de stations.js)
- * @returns {Promise<Array<{name, company, lat, lon, litros, capacidad}>>}
- */
-export async function fetchAllStations(stations) {
-  const results = await Promise.all(
-    stations.map(async (s) => ({
-      name: s.name,
-      company: s.company,
-      lat: s.lat,
-      lon: s.lon,
-      litros: await fetchStation(s),
-    }))
-  );
-
-  // Reportar litros observados y obtener capacidades actualizadas en un solo request
-  const entries = results
-    .filter((r) => r.litros > 0)
-    .map((r) => ({ name: r.name, litros: r.litros }));
-  const capMap = entries.length > 0
-    ? await reportCapacity(entries)
-    : await fetchCapacityMap();
-
-  return results.map((r) => ({
-    ...r,
-    capacidad: capMap[r.name] || 0,
-  }));
+  return results;
 }
 
 /**

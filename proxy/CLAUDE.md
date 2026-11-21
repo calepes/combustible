@@ -35,11 +35,12 @@ POST /capacidad          → [{name, litros}, ...] → actualiza max, retorna ma
 
 ### Stations API (agregado 2026-05-02)
 ```
-GET  /api/stations       → [{name, company, lat, lon, litros, capacidad}]
+GET  /api/stations       → [{name, company, lat, lon, litros, capacidad, stock}]
+GET  /api/stations?refresh=1
 ```
-Fetcha 4 fuentes directamente (sin CORS proxy), parsea 27 estaciones, cachea 60s en KV `stations_cache_v1`. Para uso desde MCPs/agentes — no requiere navegador. Output incluye `mapsUrl` por estación para navegación directa.
+El Worker consulta las cinco URLs del catálogo compartido y guarda un snapshot en KV `stations_cache_v2`. Reutiliza el snapshot durante 60 segundos en lecturas normales. El refresco manual vuelve a consultar, con una ventana de un segundo para evitar escrituras seguidas.
 
-El POST compara cada valor con el máximo almacenado en KV. Solo actualiza si el nuevo valor es mayor. Esto permite que la capacidad se "aprenda" automáticamente con el tiempo.
+`stock` contiene `litros`, `observedAt` en milisegundos UTC y `status` (`fresh`, `stale` o `unknown`). Un fallo conserva la hora de la última lectura válida. Los campos numéricos originales y el umbral de Gasgroup se mantienen para el MCP. La PWA usa `stock` para mostrar el detalle y las distancias y enlaces del catálogo para navegar.
 
 ## Whitelist de dominios
 
