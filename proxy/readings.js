@@ -29,17 +29,26 @@ function readGenex(html) {
   }));
 }
 
-function readBiopetrol(html, stations) {
-  const keys = stations.map((s) => s.key).sort((a, b) => b.length - a.length);
-  const names = keys.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-  const headings = new RegExp(`(?<![\\p{L}\\p{N}])(${names})(?![\\p{L}\\p{N}])`, 'giu');
+function readBiopetrol(html) {
+  const headings = /<div\b[^>]*class=["'][^"']*\bfont-weight-bold\b[^"']*\bbg-oscuro-1\b[^"']*["'][^>]*>\s*([^<]+?)\s*</gi;
   const readings = new Map();
-  for (const [name, section] of sections(textOf(html), headings)) {
-    const match = section.match(/volumen disponible\s*[:\-]?\s*([\d.,]+)\s*lts/i);
+  for (const [name, section] of sections(html, headings)) {
+    const match = textOf(section).match(/volumen disponible\s*[:\-]?\s*([\d.,]+)\s*lts/i);
     const liters = match ? normalizeLiters(match[1]) : null;
     if (liters != null && !readings.has(name)) readings.set(name, liters);
   }
   return readings;
+}
+
+export function readBiopetrolTime(html) {
+  if (!/<h5\b[^>]*>\s*Saldos de Gasolina\s*<\/h5>/i.test(html)) return null;
+  const match = html.match(/Última medición\s+(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})\s*</i);
+  if (!match) return null;
+  const localTime = `${match[1]}T${match[2].padStart(5, '0')}`;
+  const offset = 4 * 60 * 60_000;
+  const observedAt = Date.parse(`${localTime}:00-04:00`);
+  return Number.isFinite(observedAt) && new Date(observedAt - offset).toISOString().slice(0, 16) === localTime
+    ? observedAt : null;
 }
 
 function readGasgroup(data, station) {
@@ -79,11 +88,11 @@ function readChart(html, product) {
 export function readSource(stations, data) {
   const type = stations[0].type;
   const genex = type === 'genex' ? readGenex(data) : null;
-  const biopetrol = type === 'ec2' ? readBiopetrol(data, stations) : null;
+  const biopetrol = type === 'biopetrol' ? readBiopetrol(data) : null;
   return stations.map((station) => {
     let litros;
     if (type === 'genex') litros = genex.get(station.key.toUpperCase())?.get(station.fuel);
-    if (type === 'ec2') litros = biopetrol.get(station.key.toUpperCase());
+    if (type === 'biopetrol') litros = biopetrol.get(station.key.toUpperCase());
     if (type === 'gasgroup') litros = readGasgroup(data, station);
     if (type === 'gsheets') litros = readChart(data, station.product);
     return [station.name, litros ?? null];

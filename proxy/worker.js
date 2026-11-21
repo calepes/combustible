@@ -1,5 +1,5 @@
 import { GASGROUP_MIN_LITROS, STATIONS } from '../pwa/shared/stations.js';
-import { readSource } from './readings.js';
+import { readBiopetrolTime, readSource } from './readings.js';
 
 const ALLOWED_DOMAINS = [
   'genex.com.bo',
@@ -28,6 +28,7 @@ function isDomainAllowed(hostname) {
 const KV_KEY = 'capacidad_max';
 const STATIONS_CACHE_KEY = 'stations_cache_v2';
 const STATIONS_CACHE_TTL = 60_000;
+const BIOPETROL_MAX_READING_AGE = 60 * 60_000;
 
 const stationsBySource = new Map();
 for (const station of STATIONS) {
@@ -99,10 +100,14 @@ async function fetchAllStationsData(env, previousRows = []) {
       const response = await fetch(url, { headers, cache: 'no-store', signal: AbortSignal.timeout(8_000) });
       if (!response.ok) return [];
       const data = isGasgroup ? await response.json() : await response.text();
-      const observedAt = Date.now();
+      const fetchedAt = Date.now();
+      const isBiopetrol = stations[0].type === 'biopetrol';
+      const observedAt = isBiopetrol ? readBiopetrolTime(data) : fetchedAt;
+      if (observedAt == null || observedAt > fetchedAt) return [];
+      const status = isBiopetrol && fetchedAt - observedAt >= BIOPETROL_MAX_READING_AGE ? 'stale' : 'fresh';
       return readSource(stations, data)
         .filter(([, litros]) => Number.isSafeInteger(litros) && litros >= 0)
-        .map(([name, litros]) => [name, { litros, observedAt, status: 'fresh' }]);
+        .map(([name, litros]) => [name, { litros, observedAt, status }]);
     } catch {
       return [];
     }
@@ -112,7 +117,8 @@ async function fetchAllStationsData(env, previousRows = []) {
   const results = STATIONS.map((station) => {
     const { name, company, lat, lon } = station;
     const last = previous.get(name)?.stock;
-    const stock = readings.get(name) ?? (last?.observedAt != null
+    const reading = readings.get(name);
+    const stock = reading && reading.observedAt >= (last?.observedAt ?? 0) ? reading : (last?.observedAt != null
       ? { ...last, status: 'stale' }
       : { litros: null, observedAt: null, status: 'unknown' });
     // El MCP sigue recibiendo litros numéricos y conserva su umbral de Gasgroup.

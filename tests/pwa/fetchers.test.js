@@ -135,7 +135,7 @@ describe('stations config', () => {
       expect(s).toHaveProperty('lon');
       expect(s).toHaveProperty('url');
       expect(s).toHaveProperty('waze');
-      expect(['genex', 'ec2', 'gasgroup', 'gsheets']).toContain(s.type);
+      expect(['genex', 'biopetrol', 'gasgroup', 'gsheets']).toContain(s.type);
     }
   });
 

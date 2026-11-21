@@ -117,6 +117,45 @@ describe('GET /api/stations', () => {
     expect(rows.find((row) => row.name === 'Genex Guaracachi').litros).toBe(9000);
     expect(JSON.parse(env.CAPACIDAD._store.capacidad_max)).not.toHaveProperty('Vangas');
   });
+
+  it('usa la hora de Biopetrol y distingue estaciones ausentes de cero explícito', async () => {
+    const env = makeEnv();
+    const endpoint = 'https://app9.biocloud.info/saldos/main/donde/G';
+    const observedAt = Date.parse('2026-11-20T20:48:00-04:00');
+    vi.spyOn(Date, 'now').mockReturnValue(observedAt + 10 * 60_000);
+    const fetchSource = vi.fn(async (url) => url === endpoint ? new Response(
+      '<h5>Saldos de Gasolina</h5><h5>Última medición 2026-11-20 20:48</h5>'
+      + '<div class="font-weight-bold bg-oscuro-1">EQUIPETROL <span></span></div>Volumen disponible <div>20,125 Lts.</div>'
+      + '<div class="font-weight-bold bg-oscuro-1">PIRAI <span></span></div>Volumen disponible <div>0 Lts.</div>',
+    ) : new Response(null, { status: 503 }));
+    vi.stubGlobal('fetch', fetchSource);
+    const rows = await (await worker.fetch(makeRequest('GET', '/api/stations'), env)).json();
+    expect(fetchSource.mock.calls.filter(([url]) => url === endpoint)).toHaveLength(1);
+    expect(rows.find(({ name }) => name === 'Equipetrol').stock).toEqual({ litros: 20125, observedAt, status: 'fresh' });
+    expect(rows.find(({ name }) => name === 'Pirai').stock).toEqual({ litros: 0, observedAt, status: 'fresh' });
+    expect(rows.find(({ name }) => name === 'Berea').stock).toEqual({ litros: null, observedAt: null, status: 'unknown' });
+  });
+
+  it('no convierte una lectura antigua de Biopetrol en disponibilidad ni capacidad', async () => {
+    const env = makeEnv();
+    const observedAt = Date.parse('2026-11-20T07:48:00-04:00');
+    const now = vi.spyOn(Date, 'now').mockReturnValue(observedAt + 2 * 60 * 60_000);
+    let measurement = '2026-11-20 7:48';
+    vi.stubGlobal('fetch', async () => new Response(
+      `<h5>Saldos de Gasolina</h5><h5>Última medición ${measurement}</h5>`
+      + '<div class="font-weight-bold bg-oscuro-1">EQUIPETROL <span></span></div>Volumen disponible <div>20,125 Lts.</div>',
+    ));
+    const getStock = async () => {
+      const rows = await (await worker.fetch(makeRequest('GET', '/api/stations?refresh=1'), env)).json();
+      return rows.find(({ name }) => name === 'Equipetrol');
+    };
+    expect(await getStock()).toMatchObject({ litros: 0, capacidad: 0, stock: { litros: 20125, observedAt, status: 'stale' } });
+    for (const invalid of ['-', '2026-02-30 7:48', '2026-11-20 15:00', '2026-11-19 7:48']) {
+      now.mockReturnValue(Date.now() + 2_000);
+      measurement = invalid;
+      expect((await getStock()).stock).toEqual({ litros: 20125, observedAt, status: 'stale' });
+    }
+  });
 });
 
 /* ── Tests ────────────────────────────── */

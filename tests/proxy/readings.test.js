@@ -24,8 +24,11 @@ describe('lecturas de los proveedores', () => {
 
   it('Biopetrol asigna cada volumen a su estación y admite 0', () => {
     const stations = ['Equipetrol', 'Pirai', 'Alemana'].map(station);
-    const html = '<div>EQUIPETROL</div><span>PIRAI</span>Volumen disponible: 4,200 Lts'
-      + '<div>Alemana</div> Volumen disponible <b>0 Lts</b>';
+    const card = (name, volume = '') =>
+      `<div class="font-18 font-weight-bold bg-oscuro-1 py-2">${name} <span class="distancia"></span></div>${volume}`;
+    const html = card('EQUIPETROL') + card('CHACO', 'Volumen disponible: 9,000 Lts')
+      + card('PIRAI', 'Volumen disponible: 4,200 Lts')
+      + card('ALEMANA', 'Volumen disponible <b>0 Lts</b>');
     expect(readSource(stations, html)).toEqual([
       ['Equipetrol', null], ['Pirai', 4200], ['Alemana', 0],
     ]);

@@ -87,7 +87,7 @@ Publicar primero el Worker con `stock` en `/api/stations` y verificar el contrat
 | type | company | parser | fuente |
 |------|---------|--------|--------|
 | `genex` | Genex | `parseGenex(html, key, fuel)` | HTML scraping genex.com.bo |
-| `ec2` | Biopetrol | `parseEC2(html, key)` | HTML scraping EC2 instance |
+| `biopetrol` | Biopetrol | `readBiopetrol(html)` | HTML de la guía de gasolina en app9.biocloud.info |
 | `gasgroup` | Orsa | `parseGasGroup(json, product, codigo)` | JSON API gasgroup.com.bo `/estaciones/{depto}` |
 | `gsheets` | Rivero | `parseChartJson(html, product)` | Google Sheets chart iframe |
 

@@ -42,6 +42,8 @@ El Worker consulta las cinco URLs del catálogo compartido y guarda un snapshot 
 
 `stock` contiene `litros`, `observedAt` en milisegundos UTC y `status` (`fresh`, `stale` o `unknown`). Un fallo conserva la hora de la última lectura válida. Los campos numéricos originales y el umbral de Gasgroup se mantienen para el MCP. La PWA usa `stock` para mostrar el detalle y las distancias y enlaces del catálogo para navegar.
 
+Biopetrol publica la hora de medición de toda la guía de gasolina en hora boliviana. A partir de una hora de antigüedad, el saldo se muestra como dato anterior y queda fuera de disponibilidad y capacidad. Una tarjeta ausente carece de una lectura nueva.
+
 ## Whitelist de dominios
 
 Solo permite requests a: `genex.com.bo`, `gasgroup.com.bo`, `compute.amazonaws.com`, `docs.google.com`, `router.project-osrm.org` (y subdominios).

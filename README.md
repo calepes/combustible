@@ -16,7 +16,7 @@ Monitoreo en tiempo real de disponibilidad de **Gasolina Especial** en estacione
 | Empresa | Estaciones | Fuente |
 |---------|------------|--------|
 | Genex (11) | Banzer, Vangas, Guaracachi, Trompillo, III, Mutualista, V, IV, II, Jarajorechi, Aracataca | HTML scraping genex.com.bo |
-| Biopetrol (13) | Equipetrol, Pirai, Alemana, López, Viru Viru, Gasco, Beni, Berea, Cabezas, La Teca, Monteverde, Paraguá, Sur Central | HTML scraping EC2 |
+| Biopetrol (13) | Equipetrol, Pirai, Alemana, López, Viru Viru, Gasco, Beni, Berea, Cabezas, La Teca, Monteverde, Paraguá, Sur Central | [Guía de gasolina de Biopetrol](https://app9.biocloud.info/saldos/main/donde/G) |
 | Orsa (2) | Urubó, Alemana | API JSON gasgroup.com.bo |
 | Rivero (1) | Rivero | Google Sheets chartJson |
 
